@@ -68,7 +68,7 @@ button {
 }
 
 button {
-  background-color: var(--accent);
+  background-color: #4494f0d5;
   color: #000;
   font-weight: bold;
   margin-top: 18px;
@@ -76,7 +76,7 @@ button {
 }
 
 button:hover {
-  background-color: #02e9fa;
+  background-color: #0501e0;
   cursor: pointer;
 }
 
