@@ -11,8 +11,12 @@
   </head>
   <body>
     <div class="container">
-      <h1>Formulário Técnico</h1>
+      <h1 class="formulario-tec">Formulário Técnico</h1>
+
       <form id="formulario">
+        <label>Nome do Cliente</label>
+        <input name="nomeCliente" required />
+
         <label>Setor</label>
         <input name="setor" required />
 
@@ -20,16 +24,15 @@
         <select name="tipoEquipamento" required>
           <option value="">Selecione</option>
           <option>ACJ</option>
+          <option>SPLIT</option>
           <option>PISO TETO</option>
           <option>SELF</option>
           <option>FANCOIL</option>
           <option>CHILLER</option>
           <option>K7</option>
           <option>PORTÁTIL</option>
+          <option>OUTROS (VIDE OBS)</option>
         </select>
-
-        <label>Nome do Cliente</label>
-        <input name="nomeCliente" required />
 
         <label>Marca</label>
         <select name="marca" required>
@@ -42,7 +45,7 @@
           <option>DAIKIN</option>
           <option>ELECTROLUX</option>
           <option>PHILCO</option>
-          <option>BRIANIA</option>
+          <option>BRITANIA</option>
           <option>GREE</option>
           <option>AGRATTO</option>
           <option>VIX</option>
@@ -50,7 +53,7 @@
           <option>FUJITSU</option>
           <option>TRANE</option>
           <option>PANASONIC</option>
-          <option>HATACHI</option>
+          <option>HITACHI</option>
           <option>CONSUL</option>
           <option>KOMECO</option>
           <option>COMFEE</option>
@@ -65,15 +68,22 @@
           <option>TEMPSTAR</option>
           <option>SANYO</option>
           <option>TROCALOR</option>
+          <option>OUTROS (VIDE OBS)</option>
         </select>
 
         <label>BTU</label>
         <select name="btu" required>
           <option value="">Selecione</option>
           <option>7.000</option>
+          <option>7.500</option>
           <option>9.000</option>
+          <option>10.000</option>
+          <option>11.000</option>
           <option>12.000</option>
+          <option>15.000</option>
           <option>18.000</option>
+          <option>21.000</option>
+          <option>22.000</option>
           <option>24.000</option>
           <option>30.000</option>
           <option>36.000</option>
@@ -93,10 +103,8 @@
           <option>10TR</option>
           <option>12TR</option>
           <option>20TR</option>
+          <option>OUTROS (VIDE OBS)</option>
         </select>
-
-        <label>Data do Orçamento</label>
-        <input name="dataOrcamento" type="date" required />
 
         <label>Descrição do Serviço</label>
         <select name="descricaoServico" required>
@@ -130,7 +138,7 @@
           <option>TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA</option>
           <option>TROCA DE SERPENTINA DA CONDENSADORA</option>
           <option>TROCA DE SERPENTINA DA EVAPORADORA</option>
-          <option>OLIMPIA TROCA DO CONJUNTO DE FILTROS</option>
+          <option>TROCA DO CONJUNTO DE FILTROS</option>
           <option>TROCA DAS ALETAS</option>
           <option>TROCA DA VÁLVULA DE EXPANSÃO</option>
           <option>TROCA DA HÉLICE</option>
@@ -176,6 +184,12 @@
           <option>DESMONTAGEM PARCIAL DA EVAPORADORA</option>
           <option>DESMONTAGEM PARCIAL DA CONDENSADORA</option>
         </select>
+
+        <label>Data do Orçamento</label>
+        <input name="dataOrcamento" type="date" required />
+
+        <label>Observacão</label>
+        <textarea name="observacao" style="resize: none"></textarea>
 
         <div class="checkbox-group">
           <label>

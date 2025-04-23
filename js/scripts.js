@@ -13,10 +13,15 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
     btu: form.btu.value,
     dataorçamento: new Date(form.dataOrcamento.value).toLocaleDateString(),
     descricaoServico: form.descricaoServico.value,
+    observacao: form.observacao.value,
     tipo: tipoSelecionado,
   };
   dados.push(data);
-  form.reset();
+
+  const cliente = form.nomeCliente.value; // salva o nome antes
+  form.reset(); // reseta tudo
+  form.nomeCliente.value = cliente; // restaura o nome
+
   document.getElementById(
     "contador"
   ).textContent = `Formulários adicionados: ${dados.length}`;
