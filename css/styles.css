@@ -19,7 +19,6 @@ body {
 
 .container {
   background-color: var(--form-bg);
-  color: var(--text-color);
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
@@ -42,7 +41,7 @@ body {
 h1 {
   text-align: center;
   margin-bottom: 25px;
-  color: var(--accent);
+  color: #000;
   font-size: 1.8rem;
 }
 
@@ -61,7 +60,7 @@ button {
   padding: 10px;
   margin-top: 6px;
   background-color: var(--input-bg);
-  color: var(--text-color);
+  color: #000;
   border: 1px solid var(--accent);
   border-radius: 6px;
   font-size: 1rem;
@@ -77,7 +76,7 @@ button {
 }
 
 button:hover {
-  background-color: #2600fd;
+  background-color: #02e9fa;
   cursor: pointer;
 }
 
@@ -92,8 +91,4 @@ button:hover {
   align-items: center;
   gap: 8px;
   font-size: 0.95rem;
-}
-
-.formulario-tec {
-  color: #000;
 }
