@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="js/scripts.js" defer></script>
+    <title>Formulário Técnico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Formulário Técnico</h1>
+      <form id="formulario">
+        <label>Setor</label>
+        <input name="setor" required />
+
+        <label>Tipo de Equipamento</label>
+        <select name="tipoEquipamento" required>
+          <option value="">Selecione</option>
+          <option>ACJ</option>
+          <option>PISO TETO</option>
+          <option>SELF</option>
+          <option>FANCOIL</option>
+          <option>CHILLER</option>
+          <option>K7</option>
+          <option>PORTÁTIL</option>
+        </select>
+
+        <label>Nome do Cliente</label>
+        <input name="nomeCliente" required />
+
+        <label>Marca</label>
+        <select name="marca" required>
+          <option value="">Selecione</option>
+          <option>CARRIER</option>
+          <option>MIDEA</option>
+          <option>SPRINGER</option>
+          <option>YORK</option>
+          <option>LG</option>
+          <option>DAIKIN</option>
+          <option>ELECTROLUX</option>
+          <option>PHILCO</option>
+          <option>BRIANIA</option>
+          <option>GREE</option>
+          <option>AGRATTO</option>
+          <option>VIX</option>
+          <option>SAMSUNG</option>
+          <option>FUJITSU</option>
+          <option>TRANE</option>
+          <option>PANASONIC</option>
+          <option>HATACHI</option>
+          <option>CONSUL</option>
+          <option>KOMECO</option>
+          <option>COMFEE</option>
+          <option>MAXIFLEX</option>
+          <option>RINETTO</option>
+          <option>FONTAINE</option>
+          <option>VOGGA</option>
+          <option>ADMIRAL</option>
+          <option>OLIMPIA SPLENDID</option>
+          <option>ELGIN</option>
+          <option>TCL</option>
+          <option>TEMPSTAR</option>
+          <option>SANYO</option>
+          <option>TROCALOR</option>
+        </select>
+
+        <label>BTU</label>
+        <select name="btu" required>
+          <option value="">Selecione</option>
+          <option>7.000</option>
+          <option>9.000</option>
+          <option>12.000</option>
+          <option>18.000</option>
+          <option>24.000</option>
+          <option>30.000</option>
+          <option>36.000</option>
+          <option>48.000</option>
+          <option>56.000</option>
+          <option>57.000</option>
+          <option>60.000</option>
+          <option>72.000</option>
+          <option>80.000</option>
+          <option>90.000</option>
+          <option>120.000</option>
+          <option>144.000</option>
+          <option>240.000</option>
+          <option>3TR</option>
+          <option>5TR</option>
+          <option>6TR</option>
+          <option>10TR</option>
+          <option>12TR</option>
+          <option>20TR</option>
+        </select>
+
+        <label>Data do Orçamento</label>
+        <input name="dataOrcamento" type="date" required />
+
+        <label>Descrição do Serviço</label>
+        <select name="descricaoServico" required>
+          <option value="">Selecione</option>
+          <option>
+            SERVIÇO DE MANUTENÇÃO PREVENTIVA DA CONDENSADORA COM DIAGNÓSTICO.
+          </option>
+          <option>
+            SERVIÇO DE MANUTENÇÃO PREVENTIVA DA EVAPORADORA COM DIAGNÓSTICO.
+          </option>
+          <option>RECARGA DE GÁS 1KG</option>
+          <option>RECARGA DE GÁS 2KGS</option>
+          <option>RECARGA DE GÁS 3KGS</option>
+          <option>RECARGA DE GÁS 4KGS</option>
+          <option>RECARGA DE GÁS 5KGS</option>
+          <option>RECARGA DE GÁS 6KGS</option>
+          <option>RECARGA DE GÁS 7KGS</option>
+          <option>RECARGA DE GÁS 8KGS</option>
+          <option>RECARGA DE GÁS 9KGS</option>
+          <option>RECARGA DE GÁS 10KGS</option>
+          <option>TROCA DE CAPACITOR</option>
+          <option>TROCA DE TERMOSTATO</option>
+          <option>TROCA DE SENSOR DE TEMPERATURA</option>
+          <option>TROCA DE CONTROLE REMOTO</option>
+          <option>TROCA DA PLACA ELETRONICA RECEPTORA</option>
+          <option>TROCA DA PLACA ELETRONICA DA CONDENSADORA</option>
+          <option>TROCA DA PLACA ELETRONICA DA EVAPORADORA</option>
+          <option>TROCA DA PLACA ELETRONICA UNIVERSAL</option>
+          <option>TROCA DO COMPRESSOR</option>
+          <option>TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA</option>
+          <option>TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA</option>
+          <option>TROCA DE SERPENTINA DA CONDENSADORA</option>
+          <option>TROCA DE SERPENTINA DA EVAPORADORA</option>
+          <option>OLIMPIA TROCA DO CONJUNTO DE FILTROS</option>
+          <option>TROCA DAS ALETAS</option>
+          <option>TROCA DA VÁLVULA DE EXPANSÃO</option>
+          <option>TROCA DA HÉLICE</option>
+          <option>BOMBA DE DRENO</option>
+          <option>INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)</option>
+          <option>DESISTALAÇÃO DO APARELHO</option>
+          <option>TROCA DA CHAVE INVERSORA</option>
+          <option>TROCA DO FILTRO SECADOR</option>
+          <option>TROCA DO GABINETE</option>
+          <option>TROCA DO MOTOR DA ALETA</option>
+          <option>TROCA DE RELÊ</option>
+          <option>TROCA DA TURBINA</option>
+          <option>TROCA DO MOTOR DA TURBINA</option>
+          <option>TROCA DA GRADE DA CONDENSADORA</option>
+          <option>TROCA DA CALHA</option>
+          <option>TROCA DA CHAVE TERMOSTÁTICA</option>
+          <option>TROCA DA CÂMARA DO VENTILADOR</option>
+          <option>TROCA DA MANGUEIRA DO DRENO</option>
+          <option>TROCA DO PAINEL</option>
+          <option>TROCA DO SENSOR DE DEGELO</option>
+          <option>TROCA DO DUTO DE AR</option>
+          <option>TROCA DO BOTÃO</option>
+          <option>TROCA DOS CALCOS DE BORRACHA</option>
+          <option>TROCA DO SUPORTE DA CONDENSADORA</option>
+          <option>TROCA DO SUPORTE DA EVAPORADORA</option>
+          <option>TROCA DO CAPILAR</option>
+          <option>TROCA DAS CONEXÕES DE COBRE</option>
+          <option>TROCA DO PISTÃO</option>
+          <option>TROCA DA CHAVE DE FLUXO</option>
+          <option>TROCA DE CONTROLE DE TEMPERATURA</option>
+          <option>TROCA DA BOBINA SOLENÓIDE</option>
+          <option>TROCA DA CHAVE SELETORA</option>
+          <option>TROCA DO PRESSOSTATO</option>
+          <option>TROCA DA VÁLVULA DE SERVIÇO</option>
+          <option>TROCA DA CONTATORA</option>
+          <option>TROCA DA BOBINA DA VÁLVULA</option>
+          <option>TROCA DO PAINEL DE CONTROLE</option>
+          <option>APLICAÇÃO DE NITROGÊNIO 1KG</option>
+          <option>APLICAÇÃO DE NITROGÊNIO 2KG</option>
+          <option>APLICAÇÃO DE NITROGÊNIO 3KG</option>
+          <option>SOLDA PARA SANAR VAZAMENTO</option>
+          <option>APERTO DAS PORCAS</option>
+          <option>DESMONTAGEM PARCIAL DA EVAPORADORA</option>
+          <option>DESMONTAGEM PARCIAL DA CONDENSADORA</option>
+        </select>
+
+        <div class="checkbox-group">
+          <label>
+            <input
+              type="checkbox"
+              name="tipo"
+              value="orçamento"
+              onclick="toggleCheckbox(this)"
+            />
+            Orçamento
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="tipo"
+              value="execução"
+              onclick="toggleCheckbox(this)"
+            />
+            Execução
+          </label>
+        </div>
+        <button type="submit">Adicionar Formulário</button>
+        <button type="button" onclick="exportarExcel()">
+          Exportar para Excel
+        </button>
+      </form>
+      <p id="contador"></p>
+    </div>
+  </body>
+</html>
