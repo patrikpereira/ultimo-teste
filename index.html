@@ -5,15 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="css/styles.css" />
     <script src="js/scripts.js" defer></script>
-    <title>Formulário Técnico</title>
+    <title>Ordem de Servico</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </head>
   <body>
     <div class="container">
-      <h1>Formulário Técnico</h1>
+      <h1>Ordem de Serviços - MSJR Rep.</h1>
 
       <form id="formulario">
+        <label>Técnico / Equipe</label>
+        <input type="text" name="tecnicoEquipe" required />
+        <div class="checkbox-group" required>
+          <label>
+            <input
+              type="radio"
+              name="tipo"
+              value="orçamento"
+              onclick="toggleCheckbox(this)"
+            />
+            Orçamento
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="tipo"
+              value="execução"
+              onclick="toggleCheckbox(this)"
+            />
+            Execução
+          </label>
+        </div>
+
+        <label>Data</label>
+        <input name="dataOrcamento" type="date" required />
+
         <label>Nome do Cliente</label>
         <input name="nomeCliente" required />
 
@@ -35,7 +62,7 @@
         </select>
 
         <label>Marca</label>
-        <select name="marca" required>
+        <select id="form" name="marca" required>
           <option value="">Selecione</option>
           <option>CARRIER</option>
           <option>MIDEA</option>
@@ -106,115 +133,47 @@
           <option>OUTROS (VIDE OBS)</option>
         </select>
 
-        <label>Descrição do Serviço</label>
-        <select name="descricaoServico" required>
-          <option value="">Selecione</option>
-          <option>
-            SERVIÇO DE MANUTENÇÃO PREVENTIVA DA CONDENSADORA COM DIAGNÓSTICO.
-          </option>
-          <option>
-            SERVIÇO DE MANUTENÇÃO PREVENTIVA DA EVAPORADORA COM DIAGNÓSTICO.
-          </option>
-          <option>RECARGA DE GÁS 1KG</option>
-          <option>RECARGA DE GÁS 2KGS</option>
-          <option>RECARGA DE GÁS 3KGS</option>
-          <option>RECARGA DE GÁS 4KGS</option>
-          <option>RECARGA DE GÁS 5KGS</option>
-          <option>RECARGA DE GÁS 6KGS</option>
-          <option>RECARGA DE GÁS 7KGS</option>
-          <option>RECARGA DE GÁS 8KGS</option>
-          <option>RECARGA DE GÁS 9KGS</option>
-          <option>RECARGA DE GÁS 10KGS</option>
-          <option>TROCA DE CAPACITOR</option>
-          <option>TROCA DE TERMOSTATO</option>
-          <option>TROCA DE SENSOR DE TEMPERATURA</option>
-          <option>TROCA DE CONTROLE REMOTO</option>
-          <option>TROCA DA PLACA ELETRONICA RECEPTORA</option>
-          <option>TROCA DA PLACA ELETRONICA DA CONDENSADORA</option>
-          <option>TROCA DA PLACA ELETRONICA DA EVAPORADORA</option>
-          <option>TROCA DA PLACA ELETRONICA UNIVERSAL</option>
-          <option>TROCA DO COMPRESSOR</option>
-          <option>TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA</option>
-          <option>TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA</option>
-          <option>TROCA DE SERPENTINA DA CONDENSADORA</option>
-          <option>TROCA DE SERPENTINA DA EVAPORADORA</option>
-          <option>TROCA DO CONJUNTO DE FILTROS</option>
-          <option>TROCA DAS ALETAS</option>
-          <option>TROCA DA VÁLVULA DE EXPANSÃO</option>
-          <option>TROCA DA HÉLICE</option>
-          <option>BOMBA DE DRENO</option>
-          <option>INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)</option>
-          <option>DESISTALAÇÃO DO APARELHO</option>
-          <option>TROCA DA CHAVE INVERSORA</option>
-          <option>TROCA DO FILTRO SECADOR</option>
-          <option>TROCA DO GABINETE</option>
-          <option>TROCA DO MOTOR DA ALETA</option>
-          <option>TROCA DE RELÊ</option>
-          <option>TROCA DA TURBINA</option>
-          <option>TROCA DO MOTOR DA TURBINA</option>
-          <option>TROCA DA GRADE DA CONDENSADORA</option>
-          <option>TROCA DA CALHA</option>
-          <option>TROCA DA CHAVE TERMOSTÁTICA</option>
-          <option>TROCA DA CÂMARA DO VENTILADOR</option>
-          <option>TROCA DA MANGUEIRA DO DRENO</option>
-          <option>TROCA DO PAINEL</option>
-          <option>TROCA DO SENSOR DE DEGELO</option>
-          <option>TROCA DO DUTO DE AR</option>
-          <option>TROCA DO BOTÃO</option>
-          <option>TROCA DOS CALCOS DE BORRACHA</option>
-          <option>TROCA DO SUPORTE DA CONDENSADORA</option>
-          <option>TROCA DO SUPORTE DA EVAPORADORA</option>
-          <option>TROCA DO CAPILAR</option>
-          <option>TROCA DAS CONEXÕES DE COBRE</option>
-          <option>TROCA DO PISTÃO</option>
-          <option>TROCA DA CHAVE DE FLUXO</option>
-          <option>TROCA DE CONTROLE DE TEMPERATURA</option>
-          <option>TROCA DA BOBINA SOLENÓIDE</option>
-          <option>TROCA DA CHAVE SELETORA</option>
-          <option>TROCA DO PRESSOSTATO</option>
-          <option>TROCA DA VÁLVULA DE SERVIÇO</option>
-          <option>TROCA DA CONTATORA</option>
-          <option>TROCA DA BOBINA DA VÁLVULA</option>
-          <option>TROCA DO PAINEL DE CONTROLE</option>
-          <option>APLICAÇÃO DE NITROGÊNIO 1KG</option>
-          <option>APLICAÇÃO DE NITROGÊNIO 2KG</option>
-          <option>APLICAÇÃO DE NITROGÊNIO 3KG</option>
-          <option>SOLDA PARA SANAR VAZAMENTO</option>
-          <option>APERTO DAS PORCAS</option>
-          <option>DESMONTAGEM PARCIAL DA EVAPORADORA</option>
-          <option>DESMONTAGEM PARCIAL DA CONDENSADORA</option>
-        </select>
+        <label>N° da Maquina</label>
+        <input name="numeroMaquina" />
 
-        <label>Data do Orçamento</label>
-        <input name="dataOrcamento" type="date" required />
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="tipoServico" value="preventiva" checked />
+            Preventiva
+          </label>
+          <label>
+            <input type="radio" name="tipoServico" value="corretiva" />
+            Corretiva
+          </label>
+        </div>
+
+        <label>Descrição do Serviço</label>
+        <select name="descricaoServico" id="selectServico" required>
+          <option value="">Selecione</option>
+        </select>
+        <div id="checkboxesContainer"></div>
 
         <label>Observacão</label>
         <textarea name="observacao" style="resize: none"></textarea>
 
-        <div class="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              name="tipo"
-              value="orçamento"
-              onclick="toggleCheckbox(this)"
-            />
-            Orçamento
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="tipo"
-              value="execução"
-              onclick="toggleCheckbox(this)"
-            />
-            Execução
-          </label>
-        </div>
-        <button type="submit">Adicionar Formulário</button>
-        <button type="button" onclick="exportarExcel()">
-          Exportar para Excel
+        <label>Responsável pelo acompanhamento</label>
+        <input name="responsavel" required />
+
+        <label>Assinatura do Cliente:</label>
+        <canvas
+          id="assinatura"
+          width="400"
+          height="150"
+          style="border: 1px solid var(--accent); border-radius: 5px"
+        ></canvas>
+        <br />
+        <button type="button" onclick="limparAssinatura()">
+          Limpar Assinatura
         </button>
+
+        <button type="submit">Salvar Item</button>
+        <!-- Para isto (um único botão) -->
+        <button id="btnExportar">Exportar para Excel/PDF</button>
       </form>
       <p id="contador"></p>
     </div>
