@@ -4,11 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="css/styles.css" />
-    <script src="js/scripts.js" defer></script>
+    <!-- <script src="js/scripts.js" defer></script> -->
     <title>Ordem de Servico</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -145,13 +150,28 @@
             <input type="radio" name="tipoServico" value="corretiva" />
             Corretiva
           </label>
+          <label>
+            <input type="radio" name="tipoServico" value="ambos" />
+            Ambos
+          </label>
         </div>
 
-        <label>Descrição do Serviço</label>
-        <select name="descricaoServico" id="selectServico" required>
-          <option value="">Selecione</option>
-        </select>
-        <div id="checkboxesContainer"></div>
+        <div class="service-dropdown-container">
+          <label>Descrição do Serviço:</label>
+          <div class="service-dropdown">
+            <input
+              type="text"
+              id="busca-servico"
+              class="search-input"
+              placeholder="Digite para buscar serviços..."
+              autocomplete="off"
+            />
+            <div class="dropdown-content" id="dropdown-servicos">
+              <!-- Opções serão preenchidas dinamicamente -->
+            </div>
+          </div>
+          <div id="servicos-selecionados" class="servicos-selecionados"></div>
+        </div>
 
         <label>Observacão</label>
         <textarea name="observacao" style="resize: none"></textarea>
@@ -172,10 +192,457 @@
         </button>
 
         <button type="submit">Salvar Item</button>
-        <!-- Para isto (um único botão) -->
-        <button id="btnExportar">Exportar para Excel/PDF</button>
+        <a href="pagina-edicao.html" class="botao-gerenciar"
+          >Gerenciar Formulários Salvos</a
+        >
       </form>
       <p id="contador"></p>
     </div>
+
+    <script>
+      // Função para mostrar o dropdown corretamente
+      // Função para mostrar o dropdown corretamente
+      // Função para mostrar o dropdown corretamente
+      function mostrarDropdown() {
+        const dropdown = document.getElementById("dropdown-servicos");
+        dropdown.style.display = "block";
+        dropdown.innerHTML = ""; // Limpa opções anteriores
+
+        const servicos = opcoesServico[selectedServiceType];
+        if (servicos.length === 0) {
+          const emptyOption = document.createElement("div");
+          emptyOption.className = "service-option";
+          emptyOption.textContent = "Nenhum serviço disponível";
+          dropdown.appendChild(emptyOption);
+          return;
+        }
+
+        servicos.forEach((servico) => {
+          const option = document.createElement("div");
+          option.className = "service-option";
+          option.textContent = servico;
+          option.addEventListener("click", () => {
+            if (!selectedServicesArray.includes(servico)) {
+              selectedServicesArray.push(servico);
+              updateSelectedServicesList();
+            }
+            document.getElementById("busca-servico").value = "";
+            dropdown.style.display = "none";
+          });
+          dropdown.appendChild(option);
+        });
+      }
+
+      // Evento de foco no input de busca
+      document
+        .getElementById("busca-servico")
+        .addEventListener("focus", mostrarDropdown);
+
+      // Evento de input para busca filtrada
+      document
+        .getElementById("busca-servico")
+        .addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const dropdown = document.getElementById("dropdown-servicos");
+          const options = dropdown.querySelectorAll(".service-option");
+
+          options.forEach((option) => {
+            const texto = option.textContent.toLowerCase();
+            option.style.display = texto.includes(termo) ? "block" : "none";
+          });
+        });
+      // Opções para cada tipo de serviço
+      const opcoesServico = {
+        preventiva: [
+          "MANUTENÇÃO PREVENTIVA DA CONDENSADORA",
+          "MANUTENÇÃO PREVENTIVA DA EVAPORADORA",
+          "MANUTENÇÃO PREVENTIVA - LIMPEZA DE FILTROS",
+        ],
+        corretiva: [
+          "REVISÃO ELÉTRICA",
+          "RECARGA DE GÁS 1KG",
+          "RECARGA DE GÁS 2KGS",
+          "RECARGA DE GÁS 3KGS",
+          "RECARGA DE GÁS 4KGS",
+          "RECARGA DE GÁS 5KGS",
+          "RECARGA DE GÁS 6KGS",
+          "RECARGA DE GÁS 7KGS",
+          "RECARGA DE GÁS 8KGS",
+          "RECARGA DE GÁS 9KGS",
+          "RECARGA DE GÁS 10KG",
+          "TROCA DE CAPACITOR",
+          "TROCA DE TERMOSTATO",
+          "TROCA DE SENSOR DE TEMPERATURA",
+          "TROCA DE CONTROLE REMOTO",
+          "TROCA DA PLACA ELETRONICA RECEPTORA",
+          "TROCA DA PLACA ELETRONICA DA CONDENSADORA",
+          "TROCA DA PLACA ELETRONICA DA EVAPORADORA",
+          "TROCA DA PLACA ELETRONICA UNIVERSAL",
+          "TROCA DO COMPRESSOR",
+          "TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA",
+          "TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA EVAPORADORA",
+          "TROCA DO CONJUNTO DE FILTROS",
+          "TROCA DAS ALETAS",
+          "TROCA DA VÁLVULA DE EXPANSÃO",
+          "TROCA DA HÉLICE",
+          "BOMBA DE DRENO",
+          "INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)",
+          "DESISTALAÇÃO DO APARELHO",
+          "TROCA DA CHAVE INVERSORA",
+          "TROCA DO FILTRO SECADOR",
+          "TROCA DO GABINETE",
+          "TROCA DO MOTOR DA ALETA",
+          "TROCA DE RELÊ",
+          "TROCA DA TURBINA",
+          "TROCA DO MOTOR DA TURBINA",
+          "TROCA DA GRADE DA CONDENSADORA",
+          "TROCA DA CALHA",
+          "TROCA DA CHAVE TERMOSTÁTICA",
+          "TROCA DA CÂMARA DO VENTILADOR",
+          "TROCA DA MANGUEIRA DO DRENO",
+          "TROCA DO PAINEL",
+          "TROCA DO SENSOR DE DEGELO",
+          "TROCA DO DUTO DE AR",
+          "TROCA DO BOTÃO",
+          "TROCA DOS CALCOS DE BORRACHA",
+          "TROCA DO SUPORTE DA CONDENSADORA",
+          "TROCA DO SUPORTE DA EVAPORADORA",
+          "TROCA DO CAPILAR",
+          "TROCA DAS CONEXÕES DE COBRE",
+          "TROCA DO PISTÃO",
+          "TROCA DA CHAVE DE FLUXO",
+          "TROCA DE CONTROLE DE TEMPERATURA",
+          "TROCA DA BOBINA SOLENÓIDE",
+          "TROCA DA CHAVE SELETORA",
+          "TROCA DO PRESSOSTATO",
+          "TROCA DA VÁLVULA DE SERVIÇO",
+          "TROCA DA CONTATORA",
+          "TROCA DA BOBINA DA VÁLVULA",
+          "TROCA DO PAINEL DE CONTROLE",
+          "APLICAÇÃO DE NITROGÊNIO 1KG",
+          "APLICAÇÃO DE NITROGÊNIO 2KG",
+          "APLICAÇÃO DE NITROGÊNIO 3KG",
+          "SOLDA PARA SANAR VAZAMENTO",
+          "APERTO DAS PORCAS",
+          "DESMONTAGEM PARCIAL DA EVAPORADORA",
+          "DESMONTAGEM PARCIAL DA CONDENSADORA",
+          "OUTROS (VIDE OBS)",
+        ],
+        ambos: [
+          "MANUTENÇÃO PREVENTIVA DA CONDENSADORA",
+          "MANUTENÇÃO PREVENTIVA DA EVAPORADORA",
+          "MANUTENÇÃO PREVENTIVA - LIMPEZA DE FILTROS",
+          "REVISÃO ELÉTRICA",
+          "RECARGA DE GÁS 1KG",
+          "RECARGA DE GÁS 2KGS",
+          "RECARGA DE GÁS 3KGS",
+          "RECARGA DE GÁS 4KGS",
+          "RECARGA DE GÁS 5KGS",
+          "RECARGA DE GÁS 6KGS",
+          "RECARGA DE GÁS 7KGS",
+          "RECARGA DE GÁS 8KGS",
+          "RECARGA DE GÁS 9KGS",
+          "RECARGA DE GÁS 10KG",
+          "TROCA DE CAPACITOR",
+          "TROCA DE TERMOSTATO",
+          "TROCA DE SENSOR DE TEMPERATURA",
+          "TROCA DE CONTROLE REMOTO",
+          "TROCA DA PLACA ELETRONICA RECEPTORA",
+          "TROCA DA PLACA ELETRONICA DA CONDENSADORA",
+          "TROCA DA PLACA ELETRONICA DA EVAPORADORA",
+          "TROCA DA PLACA ELETRONICA UNIVERSAL",
+          "TROCA DO COMPRESSOR",
+          "TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA",
+          "TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA EVAPORADORA",
+          "TROCA DO CONJUNTO DE FILTROS",
+          "TROCA DAS ALETAS",
+          "TROCA DA VÁLVULA DE EXPANSÃO",
+          "TROCA DA HÉLICE",
+          "BOMBA DE DRENO",
+          "INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)",
+          "DESISTALAÇÃO DO APARELHO",
+          "TROCA DA CHAVE INVERSORA",
+          "TROCA DO FILTRO SECADOR",
+          "TROCA DO GABINETE",
+          "TROCA DO MOTOR DA ALETA",
+          "TROCA DE RELÊ",
+          "TROCA DA TURBINA",
+          "TROCA DO MOTOR DA TURBINA",
+          "TROCA DA GRADE DA CONDENSADORA",
+          "TROCA DA CALHA",
+          "TROCA DA CHAVE TERMOSTÁTICA",
+          "TROCA DA CÂMARA DO VENTILADOR",
+          "TROCA DA MANGUEIRA DO DRENO",
+          "TROCA DO PAINEL",
+          "TROCA DO SENSOR DE DEGELO",
+          "TROCA DO DUTO DE AR",
+          "TROCA DO BOTÃO",
+          "TROCA DOS CALCOS DE BORRACHA",
+          "TROCA DO SUPORTE DA CONDENSADORA",
+          "TROCA DO SUPORTE DA EVAPORADORA",
+          "TROCA DO CAPILAR",
+          "TROCA DAS CONEXÕES DE COBRE",
+          "TROCA DO PISTÃO",
+          "TROCA DA CHAVE DE FLUXO",
+          "TROCA DE CONTROLE DE TEMPERATURA",
+          "TROCA DA BOBINA SOLENÓIDE",
+          "TROCA DA CHAVE SELETORA",
+          "TROCA DO PRESSOSTATO",
+          "TROCA DA VÁLVULA DE SERVIÇO",
+          "TROCA DA CONTATORA",
+          "TROCA DA BOBINA DA VÁLVULA",
+          "TROCA DO PAINEL DE CONTROLE",
+          "APLICAÇÃO DE NITROGÊNIO 1KG",
+          "APLICAÇÃO DE NITROGÊNIO 2KG",
+          "APLICAÇÃO DE NITROGÊNIO 3KG",
+          "SOLDA PARA SANAR VAZAMENTO",
+          "APERTO DAS PORCAS",
+          "DESMONTAGEM PARCIAL DA EVAPORADORA",
+          "DESMONTAGEM PARCIAL DA CONDENSADORA",
+          "OUTROS (VIDE OBS)",
+        ],
+      };
+
+      // Variáveis globais
+      let selectedServiceType = "preventiva";
+      let selectedServicesArray = [];
+
+      // Inicialização
+      document.addEventListener("DOMContentLoaded", function () {
+        // Configurar o sistema de seleção de serviços
+        setupServiceSelection();
+
+        // Configurar os radios para atualizar os serviços
+        document
+          .querySelectorAll('input[name="tipoServico"]')
+          .forEach((radio) => {
+            radio.addEventListener("change", function () {
+              selectedServiceType = this.value;
+              selectedServicesArray = []; // Limpa os serviços selecionados ao mudar o tipo
+              updateSelectedServicesList();
+              setupServiceSelection(); // Recarrega os serviços disponíveis
+            });
+          });
+      });
+
+      // Configura o sistema de seleção de serviços
+      function setupServiceSelection() {
+        const inputBusca = document.getElementById("busca-servico");
+        const dropdown = document.getElementById("dropdown-servicos");
+        const containerSelecionados = document.getElementById(
+          "servicos-selecionados"
+        );
+
+        // Preencher dropdown com opções
+        function preencherDropdown(servicos) {
+          dropdown.innerHTML = "";
+          servicos.forEach((servico) => {
+            const div = document.createElement("div");
+            div.className = "service-option";
+            div.textContent = servico;
+            div.addEventListener("click", () => {
+              adicionarServicoSelecionado(servico);
+              inputBusca.value = "";
+              dropdown.style.display = "none";
+            });
+            dropdown.appendChild(div);
+          });
+        }
+
+        // Adicionar serviço selecionado à lista
+        function adicionarServicoSelecionado(servico) {
+          if (!selectedServicesArray.includes(servico)) {
+            selectedServicesArray.push(servico);
+            updateSelectedServicesList();
+          }
+        }
+
+        // Filtro de busca
+        inputBusca.addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const servicosDisponiveis = opcoesServico[selectedServiceType];
+          const filtrados = servicosDisponiveis.filter((servico) =>
+            servico.toLowerCase().includes(termo)
+          );
+          preencherDropdown(filtrados);
+          dropdown.style.display = filtrados.length ? "block" : "none";
+        });
+
+        // Mostrar dropdown ao focar no input
+        inputBusca.addEventListener("focus", function () {
+          preencherDropdown(opcoesServico[selectedServiceType]);
+          dropdown.style.display = "block";
+        });
+
+        // Ocultar dropdown ao clicar fora
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest(".service-dropdown")) {
+            dropdown.style.display = "none";
+          }
+        });
+      }
+
+      // Atualiza a lista de serviços selecionados
+      function updateSelectedServicesList() {
+        const containerSelecionados = document.getElementById(
+          "servicos-selecionados"
+        );
+        containerSelecionados.innerHTML = "";
+
+        if (selectedServicesArray.length === 0) {
+          return;
+        }
+
+        selectedServicesArray.forEach((servico, index) => {
+          const div = document.createElement("div");
+          div.className = "servico-selecionado";
+          div.dataset.servico = servico;
+          div.innerHTML = `
+            ${servico}
+            <button type="button" class="remover-servico">×</button>
+          `;
+
+          // Adicionar evento de remoção
+          div
+            .querySelector(".remover-servico")
+            .addEventListener("click", () => {
+              selectedServicesArray.splice(index, 1);
+              updateSelectedServicesList();
+            });
+
+          containerSelecionados.appendChild(div);
+        });
+      }
+
+      // Modifique a função de submit para usar os serviços selecionados
+      document
+        .getElementById("formulario")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+
+          // Verificação do campo técnicoEquipe
+          const tecnicoEquipe = formData.get("tecnicoEquipe");
+          if (!tecnicoEquipe) {
+            alert("Por favor, preencha o campo 'Técnico / Equipe'");
+            return;
+          }
+
+          const data = {
+            tipo: formData.get("tipo"),
+            tecnicoEquipe: tecnicoEquipe,
+            Cliente: formData.get("nomeCliente"),
+            Setor: formData.get("setor"),
+            tipoEquipamento: formData.get("tipoEquipamento"),
+            Marca: formData.get("marca"),
+            btu: formData.get("btu"),
+            dataorçamento:
+              formData.get("dataOrcamento")?.split("-").reverse().join("/") ||
+              "",
+            descricaoServico: selectedServicesArray.join(", "),
+            observacao: formData.get("observacao"),
+            responsavel: formData.get("responsavel"),
+            numeroMaquina: formData.get("numeroMaquina"),
+            assinatura:
+              document.getElementById("assinatura")?.toDataURL("image/png") ||
+              "",
+          };
+
+          // Recupera os formulários existentes ou cria um array vazio
+          const formulariosSalvos =
+            JSON.parse(localStorage.getItem("formularios")) || [];
+
+          // Adiciona o novo formulário
+          formulariosSalvos.push(data);
+
+          // Salva no localStorage
+          localStorage.setItem(
+            "formularios",
+            JSON.stringify(formulariosSalvos)
+          );
+
+          // Limpa o formulário
+          this.reset();
+
+          // Mantém o nome do cliente se necessário
+          this.nomeCliente.value = data.Cliente;
+          this.tecnicoEquipe.value = data.tecnicoEquipe;
+          this.dataOrcamento.value = formData.get("dataOrcamento");
+          this.tipo.value = data.tipo;
+
+          // Limpa os serviços selecionados e assinatura
+          selectedServicesArray = [];
+          updateSelectedServicesList();
+          limparAssinatura();
+
+          // Atualiza o contador
+          document.getElementById(
+            "contador"
+          ).textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
+          alert("Item salvo com sucesso! Pronto para adicionar novo item.");
+        });
+
+      // Código da assinatura (mantido igual)
+      const canvas = document.getElementById("assinatura");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        let desenhando = false;
+
+        // Eventos de desenho (mantidos iguais)
+        canvas.addEventListener("mousedown", () => (desenhando = true));
+        canvas.addEventListener("mouseup", () => (desenhando = false));
+        canvas.addEventListener("mouseout", () => (desenhando = false));
+        canvas.addEventListener("mousemove", desenhar);
+
+        // Versão mobile
+        canvas.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          desenhando = true;
+        });
+        canvas.addEventListener("touchend", () => (desenhando = false));
+        canvas.addEventListener("touchmove", desenharMobile);
+
+        function desenhar(e) {
+          if (!desenhando) return;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "#000";
+
+          const rect = canvas.getBoundingClientRect();
+          ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function desenharMobile(e) {
+          if (!desenhando) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          const rect = canvas.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "#000";
+
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+        }
+
+        window.limparAssinatura = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.beginPath();
+        };
+      }
+    </script>
   </body>
 </html>
