@@ -22,13 +22,14 @@
       <form id="formulario">
         <label>Técnico / Equipe</label>
         <input type="text" name="tecnicoEquipe" required />
-        <div class="checkbox-group" required>
+        <div class="checkbox-group">
           <label>
             <input
               type="radio"
               name="tipo"
               value="orçamento"
               onclick="toggleCheckbox(this)"
+              required
             />
             Orçamento
           </label>
@@ -38,6 +39,7 @@
               name="tipo"
               value="execução"
               onclick="toggleCheckbox(this)"
+              required
             />
             Execução
           </label>
@@ -200,9 +202,6 @@
     </div>
 
     <script>
-      // Função para mostrar o dropdown corretamente
-      // Função para mostrar o dropdown corretamente
-      // Função para mostrar o dropdown corretamente
       function mostrarDropdown() {
         const dropdown = document.getElementById("dropdown-servicos");
         dropdown.style.display = "block";
