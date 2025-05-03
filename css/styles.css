@@ -247,3 +247,11 @@ button:hover {
   font-style: italic;
   font-size: 14px;
 }
+
+.assinatura-required {
+  color: red;
+  font-weight: bold;
+}
+.assinatura-container {
+  margin-top: 10px;
+}

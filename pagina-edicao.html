@@ -13,6 +13,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
 
     <style>
       /* Reset e estilos base */
@@ -841,20 +843,40 @@
         carregarFormularios();
       };
 
-      async function exportarExcel() {
-        try {
-          const nomeArquivoInput = document.getElementById("nomeArquivo");
-          const nomeBase =
-            nomeArquivoInput.value.trim() ||
-            `ordens_servico_${new Date().toISOString().slice(0, 10)}`;
+     
+        async function exportarExcel() {
+  try {
+    const nomeArquivoInput = document.getElementById("nomeArquivo");
 
-          const formulariosSalvos =
-            JSON.parse(localStorage.getItem("formularios")) || [];
+    const formulariosSalvos =
+      JSON.parse(localStorage.getItem("formularios")) || [];
 
-          if (formulariosSalvos.length === 0) {
-            alert("Nenhum formulário para exportar!");
-            return;
-          }
+    if (formulariosSalvos.length === 0) {
+      alert("Nenhum formulário para exportar!");
+      return;
+    }
+
+    const cliente = formulariosSalvos[0]?.Cliente?.toUpperCase() || "CLIENTE";
+    const tipo = formulariosSalvos[0]?.tipo?.toUpperCase() || "TIPO";
+
+    const dataOriginal = formulariosSalvos[0]?.dataorçamento;
+    let dataFormatada = "";
+
+    if (dataOriginal && dataOriginal.includes("-")) {
+      const [ano, mes, dia] = dataOriginal.split("-");
+      dataFormatada = `${dia}.${mes}.${ano.slice(2)}`;
+    } else {
+      const hoje = new Date();
+      const dia = String(hoje.getDate()).padStart(2, "0");
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      const ano = String(hoje.getFullYear()).slice(2);
+      dataFormatada = `${dia}.${mes}.${ano}`;
+    }
+
+    const nomeBase =
+      nomeArquivoInput.value.trim() ||
+      `${cliente} - ${tipo} - ${dataFormatada}`;
+
 
           const workbook = XLSX.utils.book_new();
           const dadosFormatados = [
@@ -1019,166 +1041,144 @@
         }
       }
 
+      
+
       async function exportarPDF() {
-        try {
-          const { jsPDF } = window.jspdf;
-          const nomeArquivoInput = document.getElementById("nomeArquivo");
-          const nomeBase =
-            nomeArquivoInput.value.trim() ||
-            `ordens_servico_${new Date().toISOString().slice(0, 10)}`;
+    try {
+        const { jsPDF } = window.jspdf;
+        const nomeArquivoInput = document.getElementById("nomeArquivo");
 
-          const formulariosSalvos =
-            JSON.parse(localStorage.getItem("formularios")) || [];
+        const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
 
-          if (formulariosSalvos.length === 0) {
+        if (formulariosSalvos.length === 0) {
             alert("Nenhum formulário para exportar no PDF!");
             return false;
-          }
-
-          const doc = new jsPDF();
-          formulariosSalvos.forEach((item, index) => {
-            if (index > 0) doc.addPage();
-            adicionarDados(doc, item);
-          });
-
-          doc.save(`${nomeBase}.pdf`);
-          return true;
-        } catch (error) {
-          console.error("Erro ao gerar PDF:", error);
-          alert("Erro ao exportar para PDF");
-          return false;
         }
-      }
 
-      function adicionarDados(doc, item, yStart = 20) {
-        let y = yStart;
-        const pageHeight = doc.internal.pageSize.height;
-        const marginBottom = 50; // Espaço reservado para assinatura + rodapé
+        // Prepara os dados dos formulários
+        const formulariosProcessados = formulariosSalvos.map(form => ({
+            ...form,
+            tipo: form.tipo?.toUpperCase() || "N/I",
+            assinaturaImg: form.assinatura || null
+        }));
 
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("ORDEM DE SERVIÇO - MSJR REP.", 105, y, { align: "center" });
-        y += 10;
+        const doc = new jsPDF({ orientation: "landscape" });
 
-        // Linha divisória
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.5);
-        doc.line(10, y, 200, y);
-        y += 10;
-
-        // Informações principais
-        doc.setFontSize(12);
-        const campos = [
-          {
-            label: "Tipo",
-            value: item.tipo ? item.tipo.toUpperCase() : "NÃO INFORMADO",
-          },
-          {
-            label: "Técnico/Equipe",
-            value: item.tecnicoEquipe || "NÃO INFORMADO",
-          },
-          { label: "Cliente", value: item.Cliente || "NÃO INFORMADO" },
-          { label: "Setor", value: item.Setor || "NÃO INFORMADO" },
-          {
-            label: "Equipamento",
-            value: `${item.tipoEquipamento || "NÃO INFORMADO"} ${
-              item.Marca || "NÃO INFORMADO"
-            } ${item.btu || "NÃO INFORMADO"}`,
-          },
-          { label: "Nº Máquina", value: item.numeroMaquina || "NÃO INFORMADO" },
-          { label: "Data", value: item.dataorçamento || "NÃO INFORMADA" },
-          { label: "Responsável", value: item.responsavel || "NÃO INFORMADO" },
+        const columns = [
+            { header: "Cliente", dataKey: "cliente" },
+            { header: "Tipo", dataKey: "tipo" },
+            { header: "Responsável", dataKey: "responsavel" },
+            { header: "Setor", dataKey: "setor" },
+            { header: "Tipo Equip.", dataKey: "tipoEquipamento" },
+            { header: "Marca", dataKey: "marca" },
+            { header: "BTU", dataKey: "btu" },
+            { header: "Data Orç.", dataKey: "dataOrcamento" },
+            { header: "Nº Máq.", dataKey: "numeroMaquina" },
+            { header: "Descrição do Serviço", dataKey: "descricaoServico" },
+            { header: "Data Exec.", dataKey: "dataExecucao" },
+            { header: "Observação", dataKey: "observacao" },
+            { header: "Técnico/Equipe", dataKey: "tecnicoEquipe" },
+            { header: "Assinatura", dataKey: "assinatura" }
         ];
 
-        campos.forEach((campo) => {
-          doc.setFont("helvetica", "bold");
-          doc.text(`${campo.label}:`, 15, y);
-          doc.setFont("helvetica", "normal");
-          doc.text(campo.value, 60, y);
-          y += 8;
+        const body = formulariosProcessados.map(item => ({
+            cliente: item.Cliente || "N/I",
+            tipo: item.tipo || "N/I",
+            responsavel: item.responsavel || "N/I",
+            setor: item.Setor || "N/I",
+            tipoEquipamento: item.tipoEquipamento || "N/I",
+            marca: item.Marca || "N/I",
+            btu: item.btu || "N/I",
+            dataOrcamento: item.dataorçamento || "N/I",
+            numeroMaquina: item.numeroMaquina || "N/I",
+            descricaoServico: formatarDescricao(item.descricaoServico),
+            dataExecucao: item.dataExecucao || "N/I",
+            observacao: item.observacao || "N/I",
+            tecnicoEquipe: item.tecnicoEquipe || "N/I",
+            assinatura: "", // Será preenchido manualmente com imagem
+            assinaturaImg: item.assinaturaImg
+        }));
+
+        doc.autoTable({
+            columns,
+            body,
+            startY: 30,
+            styles: {
+                fontSize: 7,
+                cellPadding: 2,
+                minCellHeight: 15
+            },
+            headStyles: {
+                fillColor: [52, 73, 94],
+                textColor: 255,
+                cellPadding: 2
+            },
+            columnStyles: {
+                descricaoServico: { cellWidth: 50 },
+                observacao: { cellWidth: 30 },
+                assinatura: { cellWidth: 30 }
+            },
+            didDrawPage: function(data) {
+                const pageWidth = doc.internal.pageSize.getWidth();
+                doc.setFontSize(14);
+                doc.setFont("helvetica", "bold");
+                doc.text("ORDEM DE SERVIÇO - MSJR REP.", pageWidth / 2, 15, { align: "center" });
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text("MSJR REP. - Assistência Técnica em Refrigeração",
+                    pageWidth / 2, doc.internal.pageSize.height - 10, { align: "center" });
+            },
+            didDrawCell: function(data) {
+                if (data.column.dataKey === 'assinatura') {
+                    const rowData = data.row.raw;
+
+                    if (rowData.tipo === 'EXECUÇÃO' &&
+                        rowData.assinaturaImg &&
+                        rowData.assinaturaImg.startsWith("data:image")) {
+
+                        const imgProps = doc.getImageProperties(rowData.assinaturaImg);
+                        const imgWidth = 25;
+                        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                        const x = data.cell.x + (data.cell.width - imgWidth) / 2;
+                        const y = data.cell.y + (data.cell.height - imgHeight) / 2;
+
+                        doc.addImage(rowData.assinaturaImg, 'PNG', x, y, imgWidth, imgHeight);
+                    }
+                }
+            }
         });
 
-        y += 5;
+        const nomeBase = nomeArquivoInput.value.trim() ||
+            `${formulariosProcessados[0]?.Cliente?.toUpperCase() || "CLIENTE"} - ${formulariosProcessados[0]?.tipo || "TIPO"} - ${formatarData(formulariosProcessados[0]?.dataorçamento)}`;
 
-        // Descrição do Serviço
-        doc.setFont("helvetica", "bold");
-        doc.text("Descrição do Serviço:", 15, y);
-        y += 7;
+        doc.save(`${nomeBase}.pdf`);
+        return true;
 
-        let descricao = item.descricaoServico || "MPT";
-        if (typeof descricao === "string" && descricao.includes(",")) {
-          descricao = descricao
-            .split(",")
-            .map((s) => s.trim())
-            .join("\n");
-        }
+    } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        alert("Erro ao exportar para PDF: " + error.message);
+        return false;
+    }
+}
 
-        const descricaoLines = doc.splitTextToSize(descricao, 180);
-        doc.setFont("helvetica", "normal");
-        descricaoLines.forEach((line) => {
-          if (y > pageHeight - marginBottom) {
-            doc.addPage();
-            y = 20;
-          }
-          doc.text(line, 20, y);
-          y += 7;
-        });
 
-        // Observações com tratamento especial
-        y += 7;
-        doc.setFont("helvetica", "bold");
-        doc.text("Observações:", 15, y);
-        y += 7;
 
-        const observacoes = item.observacao || "Nenhuma";
-        const obsLines = doc.splitTextToSize(observacoes, 180);
+// Funções auxiliares (mantenha essas iguais)
+function formatarData(data) {
+    if (data && data.includes("-")) {
+        const [ano, mes, dia] = data.split("-");
+        return `${dia}.${mes}.${ano.slice(2)}`;
+    }
+    const hoje = new Date();
+    return `${String(hoje.getDate()).padStart(2, "0")}.${String(hoje.getMonth() + 1).padStart(2, "0")}.${String(hoje.getFullYear()).slice(2)}`;
+}
 
-        doc.setFont("helvetica", "normal");
-        obsLines.forEach((line) => {
-          if (y > pageHeight - marginBottom) {
-            doc.addPage();
-            y = 20;
-            doc.setFont("helvetica", "bold");
-            doc.text("Observações (continuação):", 15, y);
-            doc.setFont("helvetica", "normal");
-            y += 7;
-          }
-          doc.text(line, 20, y);
-          y += 7;
-        });
+function formatarDescricao(desc) {
+    if (!desc) return "N/I";
+    return desc.split(",").map(s => s.trim()).join("\n");
+}
 
-        // Assinatura com verificação de espaço
-        if (y > pageHeight - 40) {
-          doc.addPage();
-          y = 20;
-        }
-
-        if (item.assinatura) {
-          doc.setFont("helvetica", "bold");
-          doc.text("Assinatura do Cliente:", 15, y);
-          try {
-            doc.addImage(item.assinatura, "PNG", 15, y + 5, 80, 30);
-            y += 40;
-          } catch (e) {
-            console.error("Erro ao adicionar assinatura:", e);
-            doc.text("(Assinatura não pôde ser carregada)", 15, y + 5);
-            y += 15;
-          }
-        }
-
-        // Rodapé
-        if (y > pageHeight - 15) {
-          doc.addPage();
-          y = 20;
-        }
-
-        doc.setFontSize(10);
-        doc.text("MSJR Representações - Tel: (21) 97956-0103", 105, y, {
-          align: "center",
-        });
-
-        return y;
-      }
 
       async function exportarAmbos() {
         const btnExportar = document.getElementById("btnExportar");

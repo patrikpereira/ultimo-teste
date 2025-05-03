@@ -21,13 +21,14 @@
 
       <form id="formulario">
         <label>Técnico / Equipe</label>
-        <input type="text" name="tecnicoEquipe" required />
+        <input type="text" name="tecnicoEquipe" id="tecnicoEquipe" required />
         <div class="checkbox-group">
           <label>
             <input
               type="radio"
               name="tipo"
               value="orçamento"
+              id="tipoOrcamento"
               onclick="toggleCheckbox(this)"
               required
             />
@@ -38,6 +39,7 @@
               type="radio"
               name="tipo"
               value="execução"
+              id="tipoExecucao"
               onclick="toggleCheckbox(this)"
               required
             />
@@ -46,10 +48,10 @@
         </div>
 
         <label>Data</label>
-        <input name="dataOrcamento" type="date" required />
+        <input name="dataOrcamento" type="date" id="dataOrcamento" required />
 
         <label>Nome do Cliente</label>
-        <input name="nomeCliente" required />
+        <input name="nomeCliente" id="cliente" required />
 
         <label>Setor</label>
         <input name="setor" required />
@@ -145,15 +147,20 @@
 
         <div class="checkbox-group">
           <label>
-            <input type="radio" name="tipoServico" value="preventiva" checked />
+            <input
+              type="radio"
+              name="tipoServico"
+              value="preventiva"
+              required
+            />
             Preventiva
           </label>
           <label>
-            <input type="radio" name="tipoServico" value="corretiva" />
+            <input type="radio" name="tipoServico" value="corretiva" required />
             Corretiva
           </label>
           <label>
-            <input type="radio" name="tipoServico" value="ambos" />
+            <input type="radio" name="tipoServico" value="ambos" required />
             Ambos
           </label>
         </div>
@@ -173,6 +180,24 @@
             </div>
           </div>
           <div id="servicos-selecionados" class="servicos-selecionados"></div>
+        </div>
+        <div id="gas-container" style="margin-top: 10px; display: none">
+          <label for="busca-gas">Tipo de Gás</label>
+          <div class="service-dropdown">
+            <input
+              type="text"
+              id="busca-gas"
+              class="search-input"
+              placeholder="Digite para buscar tipo de gás..."
+              autocomplete="off"
+            />
+            <div class="dropdown-content" id="dropdown-gas">
+              <div class="dropdown-item">R410</div>
+              <div class="dropdown-item">R22</div>
+              <div class="dropdown-item">R134</div>
+            </div>
+          </div>
+          <div id="gas-selecionado" class="servicos-selecionados"></div>
         </div>
 
         <label>Observacão</label>
@@ -194,7 +219,7 @@
         </button>
 
         <button type="submit">Salvar Item</button>
-        <a href="pagina-edicao.html" class="botao-gerenciar"
+        <a href="pagina-edicao.html" id="linkGerenciar" class="botao-gerenciar"
           >Gerenciar Formulários Salvos</a
         >
       </form>
@@ -202,6 +227,104 @@
     </div>
 
     <script>
+      // Função para mostrar o dropdown do gás
+      function mostrarDropdownGas() {
+        const dropdown = document.getElementById("dropdown-gas");
+        dropdown.style.display = "block";
+        dropdown.innerHTML = "";
+
+        const tiposGas = ["R410", "R22", "R134"];
+
+        tiposGas.forEach((tipo) => {
+          const option = document.createElement("div");
+          option.className = "service-option";
+          option.textContent = tipo;
+          option.addEventListener("click", () => {
+            selecionarTipoGas(tipo);
+          });
+          dropdown.appendChild(option);
+        });
+      }
+
+      // Função para selecionar o tipo de gás
+      function selecionarTipoGas(tipo) {
+        const gasSelecionado = document.getElementById("gas-selecionado");
+        gasSelecionado.innerHTML = "";
+
+        const div = document.createElement("div");
+        div.className = "servico-selecionado";
+        div.textContent = tipo;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "×";
+        btn.className = "remover-servico";
+        btn.onclick = () => {
+          gasSelecionado.innerHTML = "";
+          verificarRecargaGas();
+        };
+
+        div.appendChild(btn);
+        gasSelecionado.appendChild(div);
+        document.getElementById("busca-gas").value = "";
+        document.getElementById("dropdown-gas").style.display = "none";
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Configuração do dropdown de gás
+        const buscaGas = document.getElementById("busca-gas");
+        const dropdownGas = document.getElementById("dropdown-gas");
+
+        // Evento de focus
+        buscaGas.addEventListener("focus", function () {
+          mostrarDropdownGas();
+        });
+
+        // Evento de clique
+        buscaGas.addEventListener("click", function () {
+          mostrarDropdownGas();
+        });
+
+        // Evento na label
+        document
+          .querySelector('label[for="busca-gas"]')
+          ?.addEventListener("click", function () {
+            buscaGas.focus();
+            mostrarDropdownGas();
+          });
+
+        // Evento de input para filtro
+        buscaGas.addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const options = dropdownGas.querySelectorAll(".service-option");
+
+          options.forEach((option) => {
+            const texto = option.textContent.toLowerCase();
+            option.style.display = texto.includes(termo) ? "block" : "none";
+          });
+        });
+
+        // Fecha dropdown se clicar fora
+        document.addEventListener("click", function (e) {
+          if (!document.getElementById("gas-container").contains(e.target)) {
+            dropdownGas.style.display = "none";
+          }
+        });
+      });
+
+      // Configuração dos radios de tipo de serviço (novo código)
+      document
+        .querySelectorAll('input[name="tipoServico"]')
+        .forEach((radio) => {
+          radio.addEventListener("change", function () {
+            selectedServiceType = this.value;
+            selectedServicesArray = [];
+            updateSelectedServicesList();
+            setupServiceSelection();
+            verificarRecargaGas();
+          });
+        });
+
       function mostrarDropdown() {
         const dropdown = document.getElementById("dropdown-servicos");
         dropdown.style.display = "block";
@@ -406,6 +529,32 @@
         ],
       };
 
+      function verificarRecargaGas() {
+        const servicos = document.querySelectorAll(
+          "#servicos-selecionados .servico-selecionado"
+        );
+        let mostrar = false;
+
+        servicos.forEach((div) => {
+          const texto = div.textContent || "";
+          if (texto.toUpperCase().includes("RECARGA DE GÁS")) {
+            mostrar = true;
+          }
+        });
+
+        const gasContainer = document.getElementById("gas-container");
+        const gasSelecionado = document.getElementById("gas-selecionado");
+
+        gasContainer.style.display = mostrar ? "block" : "none";
+
+        if (!mostrar) {
+          // Limpa valor e esconde dropdown de tipo de gás
+          gasSelecionado.innerHTML = "";
+          document.getElementById("busca-gas").value = "";
+          document.getElementById("dropdown-gas").style.display = "none";
+        }
+      }
+
       // Variáveis globais
       let selectedServiceType = "preventiva";
       let selectedServicesArray = [];
@@ -501,9 +650,9 @@
           div.className = "servico-selecionado";
           div.dataset.servico = servico;
           div.innerHTML = `
-            ${servico}
-            <button type="button" class="remover-servico">×</button>
-          `;
+                  ${servico}
+                  <button type="button" class="remover-servico">×</button>
+                `;
 
           // Adicionar evento de remoção
           div
@@ -515,6 +664,8 @@
 
           containerSelecionados.appendChild(div);
         });
+
+        verificarRecargaGas();
       }
 
       // Modifique a função de submit para usar os serviços selecionados
@@ -523,13 +674,56 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
+          const tipo = document.querySelector(
+            'input[name="tipo"]:checked'
+          ).value;
+          if (tipo === "execução") {
+            const canvas = document.getElementById("assinatura");
+            const ctx = canvas.getContext("2d");
+            const imageData = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            ).data;
+            let isEmpty = true;
+
+            // Verifica se há pixels não transparentes
+            for (let i = 3; i < imageData.length; i += 4) {
+              if (imageData[i] > 0) {
+                isEmpty = false;
+                break;
+              }
+            }
+
+            if (isEmpty) {
+              alert("A assinatura é obrigatória para serviços de execução!");
+              return;
+            }
+          }
+
           const formData = new FormData(this);
+          const gasSelecionado = document
+            .getElementById("gas-selecionado")
+            ?.textContent.replace("×", "")
+            .trim();
 
           // Verificação do campo técnicoEquipe
           const tecnicoEquipe = formData.get("tecnicoEquipe");
           if (!tecnicoEquipe) {
             alert("Por favor, preencha o campo 'Técnico / Equipe'");
             return;
+          }
+
+          // Processa a observação com o tipo de gás
+          let observacao = formData.get("observacao") || "";
+          const servicoRecarga = selectedServicesArray.find((s) =>
+            s.includes("RECARGA DE GÁS")
+          );
+
+          if (servicoRecarga && gasSelecionado) {
+            const infoGas = `${servicoRecarga} - ${gasSelecionado}`;
+            observacao = observacao ? `${observacao} | ${infoGas}` : infoGas;
           }
 
           const data = {
@@ -544,48 +738,62 @@
               formData.get("dataOrcamento")?.split("-").reverse().join("/") ||
               "",
             descricaoServico: selectedServicesArray.join(", "),
-            observacao: formData.get("observacao"),
+            observacao: observacao,
+            tipoGas: gasSelecionado, // Armazena o tipo de gás separadamente
             responsavel: formData.get("responsavel"),
             numeroMaquina: formData.get("numeroMaquina"),
-            assinatura:
-              document.getElementById("assinatura")?.toDataURL("image/png") ||
-              "",
+            assinatura: document
+              .getElementById("assinatura")
+              ?.toDataURL("image/png"),
           };
 
-          // Recupera os formulários existentes ou cria um array vazio
+          // Salva no localStorage
           const formulariosSalvos =
             JSON.parse(localStorage.getItem("formularios")) || [];
-
-          // Adiciona o novo formulário
           formulariosSalvos.push(data);
-
-          // Salva no localStorage
           localStorage.setItem(
             "formularios",
             JSON.stringify(formulariosSalvos)
           );
 
-          // Limpa o formulário
+          // Salva os dados temporários para manter os campos preenchidos
+          const dadosTemporarios = {
+            tecnicoEquipe: formData.get("tecnicoEquipe"),
+            tipo: formData.get("tipo"),
+            nomeCliente: formData.get("nomeCliente"),
+            dataOrcamento: formData.get("dataOrcamento"),
+          };
+          localStorage.setItem(
+            "formularioTemporario",
+            JSON.stringify(dadosTemporarios)
+          );
+
+          // Limpa apenas os campos que devem ser limpos
           this.reset();
-
-          // Mantém o nome do cliente se necessário
-          this.nomeCliente.value = data.Cliente;
-          this.tecnicoEquipe.value = data.tecnicoEquipe;
-          this.dataOrcamento.value = formData.get("dataOrcamento");
-          this.tipo.value = data.tipo;
-
-          // Limpa os serviços selecionados e assinatura
           selectedServicesArray = [];
           updateSelectedServicesList();
           limparAssinatura();
 
-          // Atualiza o contador
+          // Mantém os campos principais preenchidos
+          this.tecnicoEquipe.value = dadosTemporarios.tecnicoEquipe;
+          this.nomeCliente.value = dadosTemporarios.nomeCliente;
+          this.dataOrcamento.value = dadosTemporarios.dataOrcamento;
+
+          // Redefine os radio buttons de tipo (orçamento/execução)
+          document.getElementById(
+            `tipo${
+              dadosTemporarios.tipo === "orçamento" ? "Orcamento" : "Execucao"
+            }`
+          ).checked = true;
+
+          // Atualiza a variável global
+          selectedServiceType = "preventiva";
+
           document.getElementById(
             "contador"
           ).textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
           alert("Item salvo com sucesso! Pronto para adicionar novo item.");
         });
-
       // Código da assinatura (mantido igual)
       const canvas = document.getElementById("assinatura");
       if (canvas) {
@@ -642,6 +850,46 @@
           ctx.beginPath();
         };
       }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const link = document.getElementById("linkGerenciar");
+
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+
+          const tecnico = document.getElementById("tecnicoEquipe").value;
+          const cliente = document.getElementById("cliente").value;
+          const data = document.getElementById("dataOrcamento").value;
+
+          // Verifica qual rádio está selecionado
+          const tipoSelecionado = document.querySelector(
+            "input[name='tipo']:checked"
+          );
+          const tipo = tipoSelecionado ? tipoSelecionado.value : "";
+
+          const dados = { tecnico, tipo, cliente, data };
+          localStorage.setItem("formularioTemporario", JSON.stringify(dados));
+
+          window.location.href = this.href;
+        });
+
+        // Ao carregar, repopula o formulário
+        const dados = JSON.parse(localStorage.getItem("formularioTemporario"));
+        if (dados) {
+          if (dados.tecnico)
+            document.getElementById("tecnicoEquipe").value = dados.tecnico;
+          if (dados.cliente)
+            document.getElementById("cliente").value = dados.cliente;
+          if (dados.data)
+            document.getElementById("dataOrcamento").value = dados.data;
+
+          if (dados.tipo === "orçamento") {
+            document.getElementById("tipoOrcamento").checked = true;
+          } else if (dados.tipo === "execução") {
+            document.getElementById("tipoExecucao").checked = true;
+          }
+        }
+      });
     </script>
   </body>
 </html>
