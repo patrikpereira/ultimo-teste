@@ -741,25 +741,7 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
   // Verificação do tipo de serviço
   const tipo = document.querySelector('input[name="tipo"]:checked').value;
   
-  // Validação da assinatura para execução
-  if (tipo === "execução") {
-    const canvas = document.getElementById("assinatura");
-    const ctx = canvas.getContext("2d");
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let isEmpty = true;
-
-    for (let i = 3; i < imageData.length; i += 4) {
-      if (imageData[i] > 0) {
-        isEmpty = false;
-        break;
-      }
-    }
-
-    if (isEmpty) {
-      alert("A assinatura é obrigatória para serviços de execução!");
-      return;
-    }
-  }
+ 
 
   // Verificação do campo técnicoEquipe
   const tecnicoEquipe = this.tecnicoEquipe.value;
@@ -937,6 +919,10 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
           }
         }
       });
+
+      window.onload = function () {
+    document.querySelector("form").reset();
+  };
     </script>
   </body>
 </html>
