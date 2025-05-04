@@ -15,7 +15,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
-
     <style>
       /* Reset e estilos base */
       * {
@@ -843,40 +842,44 @@
         carregarFormularios();
       };
 
-     
-        async function exportarExcel() {
-  try {
-    const nomeArquivoInput = document.getElementById("nomeArquivo");
+      // Função para formatar o nome do arquivo conforme solicitado
+      function formatarNomeArquivo(formularios) {
+        if (!formularios || formularios.length === 0) {
+          return "ORDEM_SERVICO";
+        }
+        
+        const primeiroForm = formularios[0];
+        const cliente = primeiroForm.Cliente?.toUpperCase()?.replace(/\s+/g, '_') || "CLIENTE";
+        const tipo = primeiroForm.tipo?.toUpperCase() === "EXECUÇÃO" ? "EXECUCAO" : 
+                   (primeiroForm.tipo?.toUpperCase() === "ORÇAMENTO" ? "ORCAMENTO" : "TIPO");
+        
+        // Formatar data
+        let dataFormatada = "";
+        if (primeiroForm.dataorçamento && primeiroForm.dataorçamento.includes("-")) {
+          const [ano, mes, dia] = primeiroForm.dataorçamento.split("-");
+          dataFormatada = `${dia}.${mes}.${ano.slice(2)}`;
+        } else {
+          const hoje = new Date();
+          const dia = String(hoje.getDate()).padStart(2, "0");
+          const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+          const ano = String(hoje.getFullYear()).slice(2);
+          dataFormatada = `${dia}.${mes}.${ano}`;
+        }
+        
+        return `${cliente}_${tipo}_${dataFormatada}`;
+      }
 
-    const formulariosSalvos =
-      JSON.parse(localStorage.getItem("formularios")) || [];
+      async function exportarExcel() {
+        try {
+          const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
+          
+          if (formulariosSalvos.length === 0) {
+            alert("Nenhum formulário para exportar!");
+            return;
+          }
 
-    if (formulariosSalvos.length === 0) {
-      alert("Nenhum formulário para exportar!");
-      return;
-    }
-
-    const cliente = formulariosSalvos[0]?.Cliente?.toUpperCase() || "CLIENTE";
-    const tipo = formulariosSalvos[0]?.tipo?.toUpperCase() || "TIPO";
-
-    const dataOriginal = formulariosSalvos[0]?.dataorçamento;
-    let dataFormatada = "";
-
-    if (dataOriginal && dataOriginal.includes("-")) {
-      const [ano, mes, dia] = dataOriginal.split("-");
-      dataFormatada = `${dia}.${mes}.${ano.slice(2)}`;
-    } else {
-      const hoje = new Date();
-      const dia = String(hoje.getDate()).padStart(2, "0");
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-      const ano = String(hoje.getFullYear()).slice(2);
-      dataFormatada = `${dia}.${mes}.${ano}`;
-    }
-
-    const nomeBase =
-      nomeArquivoInput.value.trim() ||
-      `${cliente} - ${tipo} - ${dataFormatada}`;
-
+          // Formatar nome do arquivo conforme solicitado
+          const nomeBase = formatarNomeArquivo(formulariosSalvos);
 
           const workbook = XLSX.utils.book_new();
           const dadosFormatados = [
@@ -1041,30 +1044,29 @@
         }
       }
 
-      
-
       async function exportarPDF() {
-    try {
-        const { jsPDF } = window.jspdf;
-        const nomeArquivoInput = document.getElementById("nomeArquivo");
+        try {
+          const { jsPDF } = window.jspdf;
+          const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
 
-        const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
-
-        if (formulariosSalvos.length === 0) {
+          if (formulariosSalvos.length === 0) {
             alert("Nenhum formulário para exportar no PDF!");
             return false;
-        }
+          }
 
-        // Prepara os dados dos formulários
-        const formulariosProcessados = formulariosSalvos.map(form => ({
+          // Formatar nome do arquivo conforme solicitado
+          const nomeBase = formatarNomeArquivo(formulariosSalvos);
+
+          // Prepara os dados dos formulários
+          const formulariosProcessados = formulariosSalvos.map(form => ({
             ...form,
             tipo: form.tipo?.toUpperCase() || "N/I",
             assinaturaImg: form.assinatura || null
-        }));
+          }));
 
-        const doc = new jsPDF({ orientation: "landscape" });
+          const doc = new jsPDF({ orientation: "landscape" });
 
-        const columns = [
+          const columns = [
             { header: "Cliente", dataKey: "cliente" },
             { header: "Tipo", dataKey: "tipo" },
             { header: "Responsável", dataKey: "responsavel" },
@@ -1079,9 +1081,11 @@
             { header: "Observação", dataKey: "observacao" },
             { header: "Técnico/Equipe", dataKey: "tecnicoEquipe" },
             { header: "Assinatura", dataKey: "assinatura" }
-        ];
+          ];
 
-        const body = formulariosProcessados.map(item => ({
+          const dataAtual = new Date().toLocaleDateString("pt-BR");
+
+          const body = formulariosProcessados.map(item => ({
             cliente: item.Cliente || "N/I",
             tipo: item.tipo || "N/I",
             responsavel: item.responsavel || "N/I",
@@ -1089,96 +1093,89 @@
             tipoEquipamento: item.tipoEquipamento || "N/I",
             marca: item.Marca || "N/I",
             btu: item.btu || "N/I",
-            dataOrcamento: item.dataorçamento || "N/I",
+            dataOrcamento: item.tipo === "ORÇAMENTO" ? dataAtual : "N/I",
             numeroMaquina: item.numeroMaquina || "N/I",
             descricaoServico: formatarDescricao(item.descricaoServico),
-            dataExecucao: item.dataExecucao || "N/I",
+            dataExecucao: item.tipo === "EXECUÇÃO" ? dataAtual : "N/I",
             observacao: item.observacao || "N/I",
             tecnicoEquipe: item.tecnicoEquipe || "N/I",
-            assinatura: "", // Será preenchido manualmente com imagem
+            assinatura: "",
             assinaturaImg: item.assinaturaImg
-        }));
-
-        doc.autoTable({
+          }));
+          
+          doc.autoTable({
             columns,
             body,
             startY: 30,
             styles: {
-                fontSize: 7,
-                cellPadding: 2,
-                minCellHeight: 15
+              fontSize: 7,
+              cellPadding: 2,
+              minCellHeight: 15
             },
             headStyles: {
-                fillColor: [52, 73, 94],
-                textColor: 255,
-                cellPadding: 2
+              fillColor: [52, 73, 94],
+              textColor: 255,
+              cellPadding: 2
             },
             columnStyles: {
-                descricaoServico: { cellWidth: 50 },
-                observacao: { cellWidth: 30 },
-                assinatura: { cellWidth: 30 }
+              descricaoServico: { cellWidth: 50 },
+              observacao: { cellWidth: 30 },
+              assinatura: { cellWidth: 30 }
             },
             didDrawPage: function(data) {
-                const pageWidth = doc.internal.pageSize.getWidth();
-                doc.setFontSize(14);
-                doc.setFont("helvetica", "bold");
-                doc.text("ORDEM DE SERVIÇO - MSJR REP.", pageWidth / 2, 15, { align: "center" });
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text("MSJR REP. - Assistência Técnica em Refrigeração",
-                    pageWidth / 2, doc.internal.pageSize.height - 10, { align: "center" });
+              const pageWidth = doc.internal.pageSize.getWidth();
+              doc.setFontSize(14);
+              doc.setFont("helvetica", "bold");
+              doc.text("ORDEM DE SERVIÇO - MSJR REP.", pageWidth / 2, 15, { align: "center" });
+              doc.setFontSize(10);
+              doc.setFont("helvetica", "normal");
+              doc.text("MSJR REP. - Assistência Técnica em Refrigeração",
+                pageWidth / 2, doc.internal.pageSize.height - 10, { align: "center" });
             },
             didDrawCell: function(data) {
-                if (data.column.dataKey === 'assinatura') {
-                    const rowData = data.row.raw;
+              if (data.column.dataKey === 'assinatura') {
+                const rowData = data.row.raw;
 
-                    if (rowData.tipo === 'EXECUÇÃO' &&
-                        rowData.assinaturaImg &&
-                        rowData.assinaturaImg.startsWith("data:image")) {
+                if (rowData.tipo === 'EXECUÇÃO' &&
+                  rowData.assinaturaImg &&
+                  rowData.assinaturaImg.startsWith("data:image")) {
 
-                        const imgProps = doc.getImageProperties(rowData.assinaturaImg);
-                        const imgWidth = 25;
-                        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                  const imgProps = doc.getImageProperties(rowData.assinaturaImg);
+                  const imgWidth = 25;
+                  const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-                        const x = data.cell.x + (data.cell.width - imgWidth) / 2;
-                        const y = data.cell.y + (data.cell.height - imgHeight) / 2;
+                  const x = data.cell.x + (data.cell.width - imgWidth) / 2;
+                  const y = data.cell.y + (data.cell.height - imgHeight) / 2;
 
-                        doc.addImage(rowData.assinaturaImg, 'PNG', x, y, imgWidth, imgHeight);
-                    }
+                  doc.addImage(rowData.assinaturaImg, 'PNG', x, y, imgWidth, imgHeight);
                 }
+              }
             }
-        });
+          });
 
-        const nomeBase = nomeArquivoInput.value.trim() ||
-            `${formulariosProcessados[0]?.Cliente?.toUpperCase() || "CLIENTE"} - ${formulariosProcessados[0]?.tipo || "TIPO"} - ${formatarData(formulariosProcessados[0]?.dataorçamento)}`;
+          doc.save(`${nomeBase}.pdf`);
+          return true;
+        } catch (error) {
+          console.error("Erro ao gerar PDF:", error);
+          alert("Erro ao exportar para PDF: " + error.message);
+          return false;
+        }
+      }
 
-        doc.save(`${nomeBase}.pdf`);
-        return true;
+      // Funções auxiliares
+      function formatarData(data) {
+        if (data && data.includes("-")) {
+          const [ano, mes, dia] = data.split("-");
+          return `${dia}.${mes}.${ano.slice(2)}`;
+        }
+        const hoje = new Date();
+        return `${String(hoje.getDate()).padStart(2, "0")}.${String(hoje.getMonth() + 1).padStart(2, "0")}.${String(hoje.getFullYear()).slice(2)}`;
+      }
 
-    } catch (error) {
-        console.error("Erro ao gerar PDF:", error);
-        alert("Erro ao exportar para PDF: " + error.message);
-        return false;
-    }
-}
-
-
-
-// Funções auxiliares (mantenha essas iguais)
-function formatarData(data) {
-    if (data && data.includes("-")) {
-        const [ano, mes, dia] = data.split("-");
-        return `${dia}.${mes}.${ano.slice(2)}`;
-    }
-    const hoje = new Date();
-    return `${String(hoje.getDate()).padStart(2, "0")}.${String(hoje.getMonth() + 1).padStart(2, "0")}.${String(hoje.getFullYear()).slice(2)}`;
-}
-
-function formatarDescricao(desc) {
-    if (!desc) return "N/I";
-    return desc.split(",").map(s => s.trim()).join("\n");
-}
-
+      function formatarDescricao(desc) {
+        if (!desc) return "N/I";
+        return desc.split(",").map(s => s.trim()).join("\n");
+      }
 
       async function exportarAmbos() {
         const btnExportar = document.getElementById("btnExportar");

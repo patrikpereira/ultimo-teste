@@ -182,7 +182,7 @@
           <div id="servicos-selecionados" class="servicos-selecionados"></div>
         </div>
         <div id="gas-container" style="margin-top: 10px; display: none">
-          <label for="busca-gas">Tipo de Gás</label>
+          <label for="busca-gas">Tipo de Gás</label required>
           <div class="service-dropdown">
             <input
               type="text"
@@ -195,6 +195,8 @@
               <div class="dropdown-item">R410</div>
               <div class="dropdown-item">R22</div>
               <div class="dropdown-item">R134</div>
+              <div class="dropdown-item">R32</div>
+              <div class="dropdown-item">OUTROS - VIDE OBS</div>
             </div>
           </div>
           <div id="gas-selecionado" class="servicos-selecionados"></div>
@@ -227,13 +229,77 @@
     </div>
 
     <script>
+      
+    // Remova a variável global tipoTravado e substitua por:
+let tipoTravado = false;
+
+// Modifique a função toggleCheckbox para:
+function toggleCheckbox(radio) {
+    tipoTravado = true;
+    
+    // Desabilita os radio buttons
+    document.querySelectorAll('input[name="tipo"]').forEach(r => {
+        r.disabled = true;
+    });
+    
+    // Adiciona aviso visual
+    const aviso = document.createElement('div');
+    aviso.id = 'aviso-tipo';
+    aviso.textContent = 'Modo ' + (radio.value === 'orçamento' ? 'Orçamento' : 'Execução') + 
+                       ' selecionado. Atualize a página para alterar.';
+    aviso.style.color = '#ff0000';
+    aviso.style.margin = '10px 0';
+    aviso.style.fontWeight = 'bold';
+    
+    // Insere o aviso após os radio buttons
+    const checkboxGroup = document.querySelector('.checkbox-group');
+    // Remove aviso anterior se existir
+    const avisoAntigo = document.getElementById('aviso-tipo');
+    if (avisoAntigo) avisoAntigo.remove();
+    
+    checkboxGroup.appendChild(aviso);
+}
+
+// Modifique o DOMContentLoaded para:
+document.addEventListener("DOMContentLoaded", function () {
+    // Não verifica mais por tipo travado no localStorage
+    // Apenas mantém o estado atual da sessão
+    
+    // Se já está travado na sessão atual (sem refresh)
+    if (tipoTravado) {
+        const tipoSalvo = document.querySelector('input[name="tipo"]:checked')?.value;
+        if (tipoSalvo) {
+            // Desabilita os radio buttons
+            document.querySelectorAll('input[name="tipo"]').forEach(r => {
+                r.disabled = true;
+            });
+            
+            // Adiciona aviso visual
+            const aviso = document.createElement('div');
+            aviso.id = 'aviso-tipo';
+            aviso.textContent = 'Modo ' + (tipoSalvo === 'orçamento' ? 'Orçamento' : 'Execução') + 
+                               ' selecionado. Atualize a página para alterar.';
+            aviso.style.color = '#ff0000';
+            aviso.style.margin = '10px 0';
+            aviso.style.fontWeight = 'bold';
+            
+            const checkboxGroup = document.querySelector('.checkbox-group');
+            // Remove aviso anterior se existir
+            const avisoAntigo = document.getElementById('aviso-tipo');
+            if (avisoAntigo) avisoAntigo.remove();
+            
+            checkboxGroup.appendChild(aviso);
+        }
+    }
+});
+      
       // Função para mostrar o dropdown do gás
       function mostrarDropdownGas() {
         const dropdown = document.getElementById("dropdown-gas");
         dropdown.style.display = "block";
         dropdown.innerHTML = "";
 
-        const tiposGas = ["R410", "R22", "R134"];
+        const tiposGas = ["R410", "R22", "R134","R32", "OUTRO - VIDE OBS"];
 
         tiposGas.forEach((tipo) => {
           const option = document.createElement("div");
@@ -668,132 +734,113 @@
         verificarRecargaGas();
       }
 
-      // Modifique a função de submit para usar os serviços selecionados
-      document
-        .getElementById("formulario")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+      // Modifique a função de submit para incluir a validação do gás
+document.getElementById("formulario").addEventListener("submit", function(e) {
+  e.preventDefault();
 
-          const tipo = document.querySelector(
-            'input[name="tipo"]:checked'
-          ).value;
-          if (tipo === "execução") {
-            const canvas = document.getElementById("assinatura");
-            const ctx = canvas.getContext("2d");
-            const imageData = ctx.getImageData(
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            ).data;
-            let isEmpty = true;
+  // Verificação do tipo de serviço
+  const tipo = document.querySelector('input[name="tipo"]:checked').value;
+  
+  // Validação da assinatura para execução
+  if (tipo === "execução") {
+    const canvas = document.getElementById("assinatura");
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let isEmpty = true;
 
-            // Verifica se há pixels não transparentes
-            for (let i = 3; i < imageData.length; i += 4) {
-              if (imageData[i] > 0) {
-                isEmpty = false;
-                break;
-              }
-            }
+    for (let i = 3; i < imageData.length; i += 4) {
+      if (imageData[i] > 0) {
+        isEmpty = false;
+        break;
+      }
+    }
 
-            if (isEmpty) {
-              alert("A assinatura é obrigatória para serviços de execução!");
-              return;
-            }
-          }
+    if (isEmpty) {
+      alert("A assinatura é obrigatória para serviços de execução!");
+      return;
+    }
+  }
 
-          const formData = new FormData(this);
-          const gasSelecionado = document
-            .getElementById("gas-selecionado")
-            ?.textContent.replace("×", "")
-            .trim();
+  // Verificação do campo técnicoEquipe
+  const tecnicoEquipe = this.tecnicoEquipe.value;
+  if (!tecnicoEquipe) {
+    alert("Por favor, preencha o campo 'Técnico / Equipe'");
+    return;
+  }
 
-          // Verificação do campo técnicoEquipe
-          const tecnicoEquipe = formData.get("tecnicoEquipe");
-          if (!tecnicoEquipe) {
-            alert("Por favor, preencha o campo 'Técnico / Equipe'");
-            return;
-          }
+  // Verificação se há serviços selecionados
+  if (selectedServicesArray.length === 0) {
+    alert("Por favor, selecione pelo menos um serviço!");
+    return;
+  }
 
-          // Processa a observação com o tipo de gás
-          let observacao = formData.get("observacao") || "";
-          const servicoRecarga = selectedServicesArray.find((s) =>
-            s.includes("RECARGA DE GÁS")
-          );
+  // Verificação do tipo de gás quando houver serviço de recarga
+  const temRecargaGas = selectedServicesArray.some(s => s.includes("RECARGA DE GÁS"));
+  const gasSelecionado = document.getElementById("gas-selecionado")?.textContent.replace("×", "").trim();
+  
+  if (temRecargaGas && !gasSelecionado) {
+    alert("Por favor, selecione o tipo de gás para o serviço de recarga!");
+    return;
+  }
 
-          if (servicoRecarga && gasSelecionado) {
-            const infoGas = `${servicoRecarga} - ${gasSelecionado}`;
-            observacao = observacao ? `${observacao} | ${infoGas}` : infoGas;
-          }
+  // Processa a observação com o tipo de gás
+  let observacao = this.observacao.value || "";
+  const servicoRecarga = selectedServicesArray.find(s => s.includes("RECARGA DE GÁS"));
 
-          const data = {
-            tipo: formData.get("tipo"),
-            tecnicoEquipe: tecnicoEquipe,
-            Cliente: formData.get("nomeCliente"),
-            Setor: formData.get("setor"),
-            tipoEquipamento: formData.get("tipoEquipamento"),
-            Marca: formData.get("marca"),
-            btu: formData.get("btu"),
-            dataorçamento:
-              formData.get("dataOrcamento")?.split("-").reverse().join("/") ||
-              "",
-            descricaoServico: selectedServicesArray.join(", "),
-            observacao: observacao,
-            tipoGas: gasSelecionado, // Armazena o tipo de gás separadamente
-            responsavel: formData.get("responsavel"),
-            numeroMaquina: formData.get("numeroMaquina"),
-            assinatura: document
-              .getElementById("assinatura")
-              ?.toDataURL("image/png"),
-          };
+  if (servicoRecarga && gasSelecionado) {
+    const infoGas = `${servicoRecarga} - ${gasSelecionado}`;
+    observacao = observacao ? `${observacao} | ${infoGas}` : infoGas;
+  }
 
-          // Salva no localStorage
-          const formulariosSalvos =
-            JSON.parse(localStorage.getItem("formularios")) || [];
-          formulariosSalvos.push(data);
-          localStorage.setItem(
-            "formularios",
-            JSON.stringify(formulariosSalvos)
-          );
+  // Preparar dados para salvar
+  const data = {
+    tipo: tipo,
+    tecnicoEquipe: tecnicoEquipe,
+    Cliente: this.nomeCliente.value,
+    Setor: this.setor.value,
+    tipoEquipamento: this.tipoEquipamento.value,
+    Marca: this.marca.value,
+    btu: this.btu.value,
+    dataorçamento: this.dataOrcamento.value?.split("-").reverse().join("/") || "",
+    descricaoServico: selectedServicesArray.join(", "),
+    observacao: observacao,
+    tipoGas: gasSelecionado,
+    responsavel: this.responsavel.value,
+    numeroMaquina: this.numeroMaquina.value,
+    assinatura: tipo === "execução" ? document.getElementById("assinatura").toDataURL("image/png") : null
+  };
 
-          // Salva os dados temporários para manter os campos preenchidos
-          const dadosTemporarios = {
-            tecnicoEquipe: formData.get("tecnicoEquipe"),
-            tipo: formData.get("tipo"),
-            nomeCliente: formData.get("nomeCliente"),
-            dataOrcamento: formData.get("dataOrcamento"),
-          };
-          localStorage.setItem(
-            "formularioTemporario",
-            JSON.stringify(dadosTemporarios)
-          );
+  // Salva no localStorage
+  const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
+  formulariosSalvos.push(data);
+  localStorage.setItem("formularios", JSON.stringify(formulariosSalvos));
 
-          // Limpa apenas os campos que devem ser limpos
-          this.reset();
-          selectedServicesArray = [];
-          updateSelectedServicesList();
-          limparAssinatura();
+  // Salva os dados temporários
+  const dadosTemporarios = {
+    tecnicoEquipe: tecnicoEquipe,
+    tipo: tipo,
+    nomeCliente: this.nomeCliente.value,
+    dataOrcamento: this.dataOrcamento.value
+  };
+  localStorage.setItem("formularioTemporario", JSON.stringify(dadosTemporarios));
 
-          // Mantém os campos principais preenchidos
-          this.tecnicoEquipe.value = dadosTemporarios.tecnicoEquipe;
-          this.nomeCliente.value = dadosTemporarios.nomeCliente;
-          this.dataOrcamento.value = dadosTemporarios.dataOrcamento;
+  // Limpa os campos
+  this.reset();
+  selectedServicesArray = [];
+  updateSelectedServicesList();
+  limparAssinatura();
+  document.getElementById("gas-selecionado").innerHTML = "";
 
-          // Redefine os radio buttons de tipo (orçamento/execução)
-          document.getElementById(
-            `tipo${
-              dadosTemporarios.tipo === "orçamento" ? "Orcamento" : "Execucao"
-            }`
-          ).checked = true;
+  // Mantém os campos principais preenchidos
+  this.tecnicoEquipe.value = dadosTemporarios.tecnicoEquipe;
+  this.nomeCliente.value = dadosTemporarios.nomeCliente;
+  this.dataOrcamento.value = dadosTemporarios.dataOrcamento;
+  document.getElementById(`tipo${tipo === "orçamento" ? "Orcamento" : "Execucao"}`).checked = true;
 
-          // Atualiza a variável global
-          selectedServiceType = "preventiva";
-
-          document.getElementById(
-            "contador"
-          ).textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
-          alert("Item salvo com sucesso! Pronto para adicionar novo item.");
-        });
+  // Atualiza contador
+  document.getElementById("contador").textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
+  alert("Item salvo com sucesso! Pronto para adicionar novo item.");
+});
       // Código da assinatura (mantido igual)
       const canvas = document.getElementById("assinatura");
       if (canvas) {
@@ -867,7 +914,7 @@
           );
           const tipo = tipoSelecionado ? tipoSelecionado.value : "";
 
-          const dados = { tecnico, tipo, cliente, data };
+          const dados = { tecnico, cliente, data };
           localStorage.setItem("formularioTemporario", JSON.stringify(dados));
 
           window.location.href = this.href;
