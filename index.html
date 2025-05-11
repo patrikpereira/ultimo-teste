@@ -221,7 +221,7 @@
         </button>
 
         <button type="submit">Salvar Item</button>
-        <a href="pagina-edicao.html" id="linkGerenciar" class="botao-gerenciar"
+        <a href="pagina-edicao.html" id="linkGerenciar" class="botao-gerenciar" onclick="salvarTemporariosAntesDeSair()"
           >Gerenciar Formulários Salvos</a
         >
       </form>
@@ -229,6 +229,61 @@
     </div>
 
     <script>
+
+// Função para salvar dados temporários antes de sair da página
+function salvarTemporariosAntesDeSair() {
+        const dados = {
+          tecnico: document.getElementById("tecnicoEquipe").value,
+          tipo: document.querySelector('input[name="tipo"]:checked')?.value,
+          data: document.getElementById("dataOrcamento").value,
+          cliente: document.getElementById("cliente").value
+        };
+        localStorage.setItem("formularioTemporario", JSON.stringify(dados));
+      }
+
+      // Função simplificada para toggleCheckbox
+      function toggleCheckbox(radio) {
+        document.querySelectorAll('input[name="tipo"]').forEach(r => {
+          r.disabled = false;
+        });
+        
+        // Atualiza os dados temporários
+        const dadosAtuais = JSON.parse(localStorage.getItem("formularioTemporario")) || {};
+        dadosAtuais.tipo = radio.value;
+        localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+      }
+
+      // Ao carregar a página, recupera os dados salvos
+      document.addEventListener("DOMContentLoaded", function() {
+        const dados = JSON.parse(localStorage.getItem("formularioTemporario"));
+        
+        if (dados) {
+          if (dados.tecnico) document.getElementById("tecnicoEquipe").value = dados.tecnico;
+          if (dados.cliente) document.getElementById("cliente").value = dados.cliente;
+          if (dados.data) document.getElementById("dataOrcamento").value = dados.data;
+          
+          // Restaura o tipo selecionado
+          if (dados.tipo) {
+            const radio = document.querySelector(`input[name="tipo"][value="${dados.tipo}"]`);
+            if (radio) {
+              radio.checked = true;
+              // Desabilita os radios
+              document.querySelectorAll('input[name="tipo"]').forEach(r => {
+                r.disabled = true;
+              });
+            }
+          }
+        }
+        
+        // Configura o evento de clique no link de gerenciamento
+        document.getElementById("linkGerenciar").addEventListener("click", function(event) {
+          event.preventDefault();
+          salvarTemporariosAntesDeSair();
+          window.location.href = this.href;
+        });
+      });
+
+
       
     // Remova a variável global tipoTravado e substitua por:
 let tipoTravado = false;
@@ -241,18 +296,7 @@ function toggleCheckbox(radio) {
     document.querySelectorAll('input[name="tipo"]').forEach(r => {
         r.disabled = true;
     });
-    
-    // Adiciona aviso visual
-    const aviso = document.createElement('div');
-    aviso.id = 'aviso-tipo';
-    aviso.textContent = 'Modo ' + (radio.value === 'orçamento' ? 'Orçamento' : 'Execução') + 
-                       ' selecionado. Atualize a página para alterar.';
-    aviso.style.color = '#ff0000';
-    aviso.style.margin = '10px 0';
-    aviso.style.fontWeight = 'bold';
-    
-    // Insere o aviso após os radio buttons
-    const checkboxGroup = document.querySelector('.checkbox-group');
+
     // Remove aviso anterior se existir
     const avisoAntigo = document.getElementById('aviso-tipo');
     if (avisoAntigo) avisoAntigo.remove();
@@ -260,10 +304,48 @@ function toggleCheckbox(radio) {
     checkboxGroup.appendChild(aviso);
 }
 
+function verificarObservacaoObrigatoria() {
+  const camposObservacao = [
+    document.querySelector('select[name="tipoEquipamento"]'),
+    document.querySelector('select[name="marca"]'),
+    document.querySelector('select[name="btu"]')
+  ];
+
+  const obsField = document.querySelector('textarea[name="observacao"]');
+  const outrosSelecionado = camposObservacao.some(campo => 
+    campo && campo.value === "OUTROS (VIDE OBS)"
+  );
+
+  if (outrosSelecionado) {
+    obsField.setAttribute("required", "true");
+    obsField.style.border = "1px solid #ff0000"; // Destaca visualmente
+  } else {
+    obsField.removeAttribute("required");
+    obsField.style.border = ""; // Remove o destaque
+  }
+}
+
 // Modifique o DOMContentLoaded para:
 document.addEventListener("DOMContentLoaded", function () {
-    // Não verifica mais por tipo travado no localStorage
-    // Apenas mantém o estado atual da sessão
+  // Campos que podem ter a opção "OUTROS (VIDE OBS)"
+  const camposObservacao = [
+    document.querySelector('select[name="tipoEquipamento"]'),
+    document.querySelector('select[name="marca"]'),
+    document.querySelector('select[name="btu"]')
+  ];
+
+  // Adiciona o evento de change a cada campo
+  camposObservacao.forEach(campo => {
+    if (campo) {
+      campo.addEventListener("change", verificarObservacaoObrigatoria);
+    }
+  });
+
+  // Adiciona também ao campo de texto de observação para validação em tempo real
+  const obsField = document.querySelector('textarea[name="observacao"]');
+  if (obsField) {
+    obsField.addEventListener("input", verificarObservacaoObrigatoria);
+  }
     
     // Se já está travado na sessão atual (sem refresh)
     if (tipoTravado) {
@@ -277,8 +359,6 @@ document.addEventListener("DOMContentLoaded", function () {
             // Adiciona aviso visual
             const aviso = document.createElement('div');
             aviso.id = 'aviso-tipo';
-            aviso.textContent = 'Modo ' + (tipoSalvo === 'orçamento' ? 'Orçamento' : 'Execução') + 
-                               ' selecionado. Atualize a página para alterar.';
             aviso.style.color = '#ff0000';
             aviso.style.margin = '10px 0';
             aviso.style.fontWeight = 'bold';
@@ -599,7 +679,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const servicos = document.querySelectorAll(
           "#servicos-selecionados .servico-selecionado"
         );
-        let mostrar = false;
+        let mostrar = true;
 
         servicos.forEach((div) => {
           const texto = div.textContent || "";
@@ -774,6 +854,24 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
     observacao = observacao ? `${observacao} | ${infoGas}` : infoGas;
   }
 
+   // Nova verificação para OUTROS (VIDE OBS)
+   const camposObservacao = [
+    this.tipoEquipamento,
+    this.marca,
+    this.btu
+  ];
+
+  const outrosSelecionado = camposObservacao.some(campo => 
+    campo.value === "OUTROS (VIDE OBS)"
+  );
+
+  if (outrosSelecionado && !this.observacao.value.trim()) {
+    alert("Por favor, preencha o campo Observação quando selecionar 'OUTROS (VIDE OBS)'");
+    this.observacao.focus();
+    return;
+  }
+
+
   // Preparar dados para salvar
   const data = {
     tipo: tipo,
@@ -886,25 +984,23 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
         link.addEventListener("click", function (event) {
           event.preventDefault();
 
-          const tecnico = document.getElementById("tecnicoEquipe").value;
-          const cliente = document.getElementById("cliente").value;
-          const data = document.getElementById("dataOrcamento").value;
+        // Salva os dados atuais no localStorage antes de sair
+  const dadosAtuais = {
+    tecnico: document.getElementById("tecnicoEquipe").value,
+    tipo: document.querySelector('input[name="tipo"]:checked')?.value,
+    data: document.getElementById("dataOrcamento").value,
+    cliente: document.getElementById("cliente").value
+  };
 
-          // Verifica qual rádio está selecionado
-          const tipoSelecionado = document.querySelector(
-            "input[name='tipo']:checked"
-          );
-          const tipo = tipoSelecionado ? tipoSelecionado.value : "";
-
-          const dados = { tecnico, cliente, data };
-          localStorage.setItem("formularioTemporario", JSON.stringify(dados));
-
-          window.location.href = this.href;
+  localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+  
+  // Redireciona para a página de edição
+  window.location.href = this.href;
         });
 
         // Ao carregar, repopula o formulário
-        const dados = JSON.parse(localStorage.getItem("formularioTemporario"));
-        if (dados) {
+        const dadosTemporarios = JSON.parse(localStorage.getItem("formularioTemporario"));
+        if (dadosTemporarios) {
           if (dados.tecnico)
             document.getElementById("tecnicoEquipe").value = dados.tecnico;
           if (dados.cliente)
@@ -920,9 +1016,54 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
         }
       });
 
-      window.onload = function () {
-    document.querySelector("form").reset();
-  };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    // Apaga os dados temporários se for um reload (F5)
+    if (performance.navigation.type === 1) {
+      localStorage.removeItem("formularioTemporario");
+    }
+
+    // Recupera os dados temporários se existirem
+    const dadosTemp = JSON.parse(localStorage.getItem("formularioTemporario"));
+    if (dadosTemp) {
+      const tecnicoInput = document.getElementById("tecnicoEquipe");
+      const clienteInput = document.getElementById("cliente");
+      const dataInput = document.getElementById("dataOrcamento");
+
+      if (tecnicoInput) tecnicoInput.value = dadosTemp.tecnicoEquipe || "";
+      if (clienteInput) clienteInput.value = dadosTemp.nomeCliente || "";
+      if (dataInput) dataInput.value = dadosTemp.dataOrcamento || "";
+
+      if (dadosTemp.tipo === "orçamento") {
+        const radio = document.getElementById("tipoOrcamento");
+        if (radio) radio.checked = true;
+      } else if (dadosTemp.tipo === "execução") {
+        const radio = document.getElementById("tipoExecucao");
+        if (radio) radio.checked = true;
+      }
+    }
+  });
+
+  window.addEventListener("load", () => {
+    // Se a navegação foi um reload (F5)
+    if (performance.navigation.type === 1) {
+      localStorage.removeItem("formularioTemporario");
+    }
+
+    // Se quiser popular os campos com os dados temporários (navegação interna)
+    const dadosTemp = JSON.parse(localStorage.getItem("formularioTemporario"));
+    if (dadosTemp) {
+      document.getElementById("tecnicoEquipe").value = dadosTemp.tecnicoEquipe || "";
+      document.getElementById("cliente").value = dadosTemp.nomeCliente || "";
+      document.getElementById("dataOrcamento").value = dadosTemp.dataOrcamento || "";
+
+      if (dadosTemp.tipo === "orçamento") {
+        document.getElementById("tipoOrcamento").checked = true;
+      } else if (dadosTemp.tipo === "execução") {
+        document.getElementById("tipoExecucao").checked = true;
+      }
+    }
+  });
     </script>
   </body>
 </html>
