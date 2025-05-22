@@ -174,6 +174,7 @@
               class="search-input"
               placeholder="Digite para buscar serviços..."
               autocomplete="off"
+              readonly
             />
             <div class="dropdown-content" id="dropdown-servicos">
               <!-- Opções serão preenchidas dinamicamente -->
@@ -190,20 +191,21 @@
               class="search-input"
               placeholder="Digite para buscar tipo de gás..."
               autocomplete="off"
+              readonly
             />
-            <div class="dropdown-content" id="dropdown-gas">
+            <div class="dropdown-content" id="dropdown-gas" for="busca-gas">
               <div class="dropdown-item">R410</div>
               <div class="dropdown-item">R22</div>
               <div class="dropdown-item">R134</div>
               <div class="dropdown-item">R32</div>
               <div class="dropdown-item">OUTROS - VIDE OBS</div>
-            </div>
+            </div required>
           </div>
           <div id="gas-selecionado" class="servicos-selecionados"></div>
         </div>
 
         <label>Observacão</label>
-        <textarea name="observacao" style="resize: none"></textarea>
+        <textarea name="observacao" style="resize: none; text-transform: uppercase;"></textarea>
 
         <label>Responsável pelo acompanhamento</label>
         <input name="responsavel" required />
@@ -229,29 +231,13 @@
     </div>
 
     <script>
+      function selecionarGas(nomeGas) {
+  const inputGas = document.getElementById("busca-gas");
+  inputGas.value = nomeGas; // Isso é crucial!
+}
 
-// Função para salvar dados temporários antes de sair da página
-function salvarTemporariosAntesDeSair() {
-        const dados = {
-          tecnico: document.getElementById("tecnicoEquipe").value,
-          tipo: document.querySelector('input[name="tipo"]:checked')?.value,
-          data: document.getElementById("dataOrcamento").value,
-          cliente: document.getElementById("cliente").value
-        };
-        localStorage.setItem("formularioTemporario", JSON.stringify(dados));
-      }
 
-      // Função simplificada para toggleCheckbox
-      function toggleCheckbox(radio) {
-        document.querySelectorAll('input[name="tipo"]').forEach(r => {
-          r.disabled = false;
-        });
-        
-        // Atualiza os dados temporários
-        const dadosAtuais = JSON.parse(localStorage.getItem("formularioTemporario")) || {};
-        dadosAtuais.tipo = radio.value;
-        localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
-      }
+      
 
       // Ao carregar a página, recupera os dados salvos
       document.addEventListener("DOMContentLoaded", function() {
@@ -275,11 +261,20 @@ function salvarTemporariosAntesDeSair() {
           }
         }
         
+        
         // Configura o evento de clique no link de gerenciamento
         document.getElementById("linkGerenciar").addEventListener("click", function(event) {
           event.preventDefault();
-          salvarTemporariosAntesDeSair();
-          window.location.href = this.href;
+          
+          const dadosAtuais = {
+    tecnico: document.getElementById("tecnicoEquipe").value,
+    cliente: document.getElementById("cliente").value,
+    data: document.getElementById("dataOrcamento").value
+  };
+
+          localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+
+  window.location.href = this.href;
         });
       });
 
@@ -305,25 +300,48 @@ function toggleCheckbox(radio) {
 }
 
 function verificarObservacaoObrigatoria() {
-  const camposObservacao = [
-    document.querySelector('select[name="tipoEquipamento"]'),
-    document.querySelector('select[name="marca"]'),
-    document.querySelector('select[name="btu"]')
+  const campos = [
+    { campo: document.querySelector('select[name="tipoEquipamento"]'), label: "Tipo de Equipamento" },
+    { campo: document.querySelector('select[name="marca"]'), label: "Marca" },
+    { campo: document.querySelector('select[name="btu"]'), label: "BTU" }
   ];
 
   const obsField = document.querySelector('textarea[name="observacao"]');
-  const outrosSelecionado = camposObservacao.some(campo => 
-    campo && campo.value === "OUTROS (VIDE OBS)"
-  );
+  let outrosSelecionado = false;
 
+  campos.forEach(({ campo, label }) => {
+    const parent = campo.parentElement;
+    const existingWarning = parent.querySelector('.aviso-outros');
+
+    if (campo.value === "OUTROS (VIDE OBS)") {
+      outrosSelecionado = true;
+
+      // Adiciona o aviso se ainda não existir
+      if (!existingWarning) {
+        const span = document.createElement("span");
+        span.className = "aviso-outros";
+        span.textContent = ` ⚠️ Especifique em Observação (${label})`;
+        span.style.color = "red";
+        span.style.fontSize = "12px";
+        span.style.marginLeft = "8px";
+        parent.appendChild(span);
+      }
+    } else {
+      // Remove o aviso se não for "OUTROS"
+      if (existingWarning) existingWarning.remove();
+    }
+  });
+
+  // Exige Observação se houver "OUTROS"
   if (outrosSelecionado) {
-    obsField.setAttribute("required", "true");
-    obsField.style.border = "1px solid #ff0000"; // Destaca visualmente
+    obsField.setAttribute("required", "required");
+    obsField.style.border = "1px solid red";
   } else {
     obsField.removeAttribute("required");
-    obsField.style.border = ""; // Remove o destaque
+    obsField.style.border = "";
   }
 }
+
 
 // Modifique o DOMContentLoaded para:
 document.addEventListener("DOMContentLoaded", function () {
@@ -339,7 +357,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (campo) {
       campo.addEventListener("change", verificarObservacaoObrigatoria);
     }
+
   });
+
 
   // Adiciona também ao campo de texto de observação para validação em tempo real
   const obsField = document.querySelector('textarea[name="observacao"]');
@@ -676,30 +696,15 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       function verificarRecargaGas() {
-        const servicos = document.querySelectorAll(
-          "#servicos-selecionados .servico-selecionado"
-        );
-        let mostrar = true;
+  const gasContainer = document.getElementById("gas-container");
+  const buscaGas = document.getElementById("busca-gas");
 
-        servicos.forEach((div) => {
-          const texto = div.textContent || "";
-          if (texto.toUpperCase().includes("RECARGA DE GÁS")) {
-            mostrar = true;
-          }
-        });
+  // Sempre exibe o campo de gás
+  gasContainer.style.display = "block";
 
-        const gasContainer = document.getElementById("gas-container");
-        const gasSelecionado = document.getElementById("gas-selecionado");
-
-        gasContainer.style.display = mostrar ? "block" : "none";
-
-        if (!mostrar) {
-          // Limpa valor e esconde dropdown de tipo de gás
-          gasSelecionado.innerHTML = "";
-          document.getElementById("busca-gas").value = "";
-          document.getElementById("dropdown-gas").style.display = "none";
-        }
-      }
+  // Torna o campo obrigatório
+  buscaGas.setAttribute("required", "required");
+}
 
       // Variáveis globais
       let selectedServiceType = "preventiva";
@@ -817,12 +822,17 @@ document.addEventListener("DOMContentLoaded", function () {
       // Modifique a função de submit para incluir a validação do gás
 document.getElementById("formulario").addEventListener("submit", function(e) {
   e.preventDefault();
+  
+  const gasSelecionado = document.getElementById("gas-selecionado")?.textContent.replace("×", "").trim();
+
+  if (!gasSelecionado) {
+    alert("Selecione o tipo de gás.");
+    return;
+  }
 
   // Verificação do tipo de serviço
   const tipo = document.querySelector('input[name="tipo"]:checked').value;
   
- 
-
   // Verificação do campo técnicoEquipe
   const tecnicoEquipe = this.tecnicoEquipe.value;
   if (!tecnicoEquipe) {
@@ -836,26 +846,16 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
     return;
   }
 
-  // Verificação do tipo de gás quando houver serviço de recarga
-  const temRecargaGas = selectedServicesArray.some(s => s.includes("RECARGA DE GÁS"));
-  const gasSelecionado = document.getElementById("gas-selecionado")?.textContent.replace("×", "").trim();
-  
-  if (temRecargaGas && !gasSelecionado) {
-    alert("Por favor, selecione o tipo de gás para o serviço de recarga!");
-    return;
-  }
-
-  // Processa a observação com o tipo de gás
+  // Processa a observação incluindo SEMPRE o tipo de gás
   let observacao = this.observacao.value || "";
-  const servicoRecarga = selectedServicesArray.find(s => s.includes("RECARGA DE GÁS"));
+  
+  // Adiciona o tipo de gás à observação (formatado de forma clara)
+  observacao = observacao 
+    ? `${observacao} | Tipo de Gás: ${gasSelecionado}`
+    : `Tipo de Gás: ${gasSelecionado}`;
 
-  if (servicoRecarga && gasSelecionado) {
-    const infoGas = `${servicoRecarga} - ${gasSelecionado}`;
-    observacao = observacao ? `${observacao} | ${infoGas}` : infoGas;
-  }
-
-   // Nova verificação para OUTROS (VIDE OBS)
-   const camposObservacao = [
+  // Verificação para OUTROS (VIDE OBS)
+  const camposObservacao = [
     this.tipoEquipamento,
     this.marca,
     this.btu
@@ -870,7 +870,6 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
     this.observacao.focus();
     return;
   }
-
 
   // Preparar dados para salvar
   const data = {
@@ -898,9 +897,9 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
   // Salva os dados temporários
   const dadosTemporarios = {
     tecnicoEquipe: tecnicoEquipe,
-    tipo: tipo,
     nomeCliente: this.nomeCliente.value,
-    dataOrcamento: this.dataOrcamento.value
+    dataOrcamento: this.dataOrcamento.value,
+    tipo: tipo // Adicionado para manter o tipo entre navegações
   };
   localStorage.setItem("formularioTemporario", JSON.stringify(dadosTemporarios));
 
@@ -915,7 +914,15 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
   this.tecnicoEquipe.value = dadosTemporarios.tecnicoEquipe;
   this.nomeCliente.value = dadosTemporarios.nomeCliente;
   this.dataOrcamento.value = dadosTemporarios.dataOrcamento;
-  document.getElementById(`tipo${tipo === "orçamento" ? "Orcamento" : "Execucao"}`).checked = true;
+  
+  // Mantém o tipo selecionado e travado
+  const radioTipo = document.getElementById(`tipo${tipo === "orçamento" ? "Orcamento" : "Execucao"}`);
+  if (radioTipo) {
+    radioTipo.checked = true;
+    document.querySelectorAll('input[name="tipo"]').forEach(r => {
+      r.disabled = true;
+    });
+  }
 
   // Atualiza contador
   document.getElementById("contador").textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
@@ -987,7 +994,6 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
         // Salva os dados atuais no localStorage antes de sair
   const dadosAtuais = {
     tecnico: document.getElementById("tecnicoEquipe").value,
-    tipo: document.querySelector('input[name="tipo"]:checked')?.value,
     data: document.getElementById("dataOrcamento").value,
     cliente: document.getElementById("cliente").value
   };
@@ -1000,28 +1006,22 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
 
         // Ao carregar, repopula o formulário
         const dadosTemporarios = JSON.parse(localStorage.getItem("formularioTemporario"));
-        if (dadosTemporarios) {
-          if (dados.tecnico)
-            document.getElementById("tecnicoEquipe").value = dados.tecnico;
-          if (dados.cliente)
-            document.getElementById("cliente").value = dados.cliente;
-          if (dados.data)
-            document.getElementById("dataOrcamento").value = dados.data;
-
-          if (dados.tipo === "orçamento") {
-            document.getElementById("tipoOrcamento").checked = true;
-          } else if (dados.tipo === "execução") {
-            document.getElementById("tipoExecucao").checked = true;
-          }
-        }
+if (dadosTemporarios) {
+  if (dadosTemporarios.tecnico)
+    document.getElementById("tecnicoEquipe").value = dadosTemporarios.tecnico;
+  if (dadosTemporarios.cliente)
+    document.getElementById("cliente").value = dadosTemporarios.cliente;
+  if (dadosTemporarios.data)
+    document.getElementById("dataOrcamento").value = dadosTemporarios.data;
+}
       });
 
 
   window.addEventListener("DOMContentLoaded", () => {
     // Apaga os dados temporários se for um reload (F5)
-    if (performance.navigation.type === 1) {
-      localStorage.removeItem("formularioTemporario");
-    }
+    // if (performance.navigation.type === 1) {
+    //   localStorage.removeItem("formularioTemporario");
+    // }
 
     // Recupera os dados temporários se existirem
     const dadosTemp = JSON.parse(localStorage.getItem("formularioTemporario"));
@@ -1033,15 +1033,8 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
       if (tecnicoInput) tecnicoInput.value = dadosTemp.tecnicoEquipe || "";
       if (clienteInput) clienteInput.value = dadosTemp.nomeCliente || "";
       if (dataInput) dataInput.value = dadosTemp.dataOrcamento || "";
-
-      if (dadosTemp.tipo === "orçamento") {
-        const radio = document.getElementById("tipoOrcamento");
-        if (radio) radio.checked = true;
-      } else if (dadosTemp.tipo === "execução") {
-        const radio = document.getElementById("tipoExecucao");
-        if (radio) radio.checked = true;
-      }
     }
+
   });
 
   window.addEventListener("load", () => {
@@ -1056,14 +1049,19 @@ document.getElementById("formulario").addEventListener("submit", function(e) {
       document.getElementById("tecnicoEquipe").value = dadosTemp.tecnicoEquipe || "";
       document.getElementById("cliente").value = dadosTemp.nomeCliente || "";
       document.getElementById("dataOrcamento").value = dadosTemp.dataOrcamento || "";
-
-      if (dadosTemp.tipo === "orçamento") {
-        document.getElementById("tipoOrcamento").checked = true;
-      } else if (dadosTemp.tipo === "execução") {
-        document.getElementById("tipoExecucao").checked = true;
-      }
     }
   });
+
+  // Função para salvar dados temporários
+      function salvarDadosTemporarios() {
+        const dadosTemporarios = {
+          tecnico: document.getElementById("tecnicoEquipe").value,
+          cliente: document.getElementById("cliente").value,
+          data: document.getElementById("dataOrcamento").value,
+          tipo: document.querySelector('input[name="tipo"]:checked')?.value
+        };
+        localStorage.setItem("formularioTemporario", JSON.stringify(dadosTemporarios));
+      }
     </script>
   </body>
 </html>

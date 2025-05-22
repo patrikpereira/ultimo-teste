@@ -387,7 +387,10 @@
         <!-- Formulários serão carregados aqui -->
       </div>
     <script>
-
+      function limparDadosTemporarios() {
+    localStorage.removeItem("formularioTemporario");
+    window.location.href = "index.html"; // Ou sua página principal
+}
 
       // Função para carregar os dropdowns
       function carregarDropdowns(formEdicao, index, formulario) {
@@ -969,7 +972,7 @@
                 "",
                 "",
                 item.tipo === "execução" ? item.dataorçamento : "",
-                item.observacao || "",
+                (item.observacao || "").toUpperCase(),
                 "",
                 "",
                 item.tecnicoEquipe,
@@ -1099,7 +1102,7 @@
             numeroMaquina: item.numeroMaquina || "N/I",
             descricaoServico: formatarDescricao(item.descricaoServico),
             dataExecucao: item.tipo === "EXECUÇÃO" ? dataAtual : "N/I",
-            observacao: item.observacao || "N/I",
+            observacao: (item.observacao || "N/I").toUpperCase(),
             tecnicoEquipe: item.tecnicoEquipe || "N/I",
             assinatura: "",
             assinaturaImg: item.assinaturaImg
