@@ -320,6 +320,46 @@
         margin-top: 5px;
       }
 
+        #btnExportarExcel {
+      background-color: #007bff;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnExportarExcel:hover {
+      background-color: #0069d9;
+      transform: translateY(-2px);
+    }
+
+    #btnExportarPDF {
+      background-color: #28a745;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnExportarPDF:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+      
+    }
+
+    #btnApagarOS {
+      background-color: #dc3545;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnApagarOS:hover {
+      background-color: #c82333;
+      transform: translateY(-2px);
+    }
+
       /* Media Queries para responsividade */
       @media (min-width: 768px) {
         .formulario-cabecalho {
@@ -372,12 +412,12 @@
         <div class="arquivo-exportar">
           <label for="nomeArquivo">Nome do arquivo:</label>
           <input type="text" id="nomeArquivo" placeholder="(sem extensão)" />
-          <button id="btnExportar" class="btn btn-success">
-            Exportar para Excel/PDF
-          </button>
+          <button id="btnExportarExcel">Exportar Excel</button>
+          <button id="btnExportarPDF">Exportar PDF</button>
           <button class="btn btn-secondary btn-voltar" onclick="window.location.href='index.html'">
             ← Voltar
           </button>
+          <button id="btnApagarOS">Apagar Todas as OS</button>
         </div>
       </div>
       
@@ -387,6 +427,18 @@
         <!-- Formulários serão carregados aqui -->
       </div>
     <script>
+      function apagarTodasOS() {
+  const confirmar = confirm("Tem certeza que deseja apagar todas as OS? Esta ação não pode ser desfeita.");
+
+  if (confirmar) {
+    localStorage.removeItem("formularios");
+    alert("Todas as OS foram apagadas com sucesso!");
+    // Se quiser, redirecione o usuário para a página inicial:
+    // window.location.href = "index.html";
+  }
+}
+
+document.getElementById("btnApagarOS").addEventListener("click", apagarTodasOS);
       function limparDadosTemporarios() {
     localStorage.removeItem("formularioTemporario");
     window.location.href = "index.html"; // Ou sua página principal
@@ -1182,35 +1234,39 @@
         return desc.split(",").map(s => s.trim()).join("\n");
       }
 
-      async function exportarAmbos() {
-        const btnExportar = document.getElementById("btnExportar");
-        if (!btnExportar) return;
+      async function exportarArquivo(tipo) {
+  const botao = document.getElementById(`btnExportar${tipo}`);
+  if (!botao) return;
 
-        const btnOriginalText = btnExportar.textContent;
+  const textoOriginal = botao.textContent;
 
-        try {
-          btnExportar.textContent = "Exportando...";
-          btnExportar.disabled = true;
+  try {
+    botao.textContent = "Exportando...";
+    botao.disabled = true;
 
-          const excelSuccess = await exportarExcel();
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          const pdfSuccess = await exportarPDF();
+    let sucesso = false;
+    if (tipo === "Excel") {
+      sucesso = await exportarExcel();
+    } else if (tipo === "PDF") {
+      sucesso = await exportarPDF();
+    }
 
-          if (excelSuccess && pdfSuccess) {
-            localStorage.removeItem("formularios");
-            alert("Arquivos exportados com sucesso! As OS foram removidas.");
-            window.location.href = "index.html";
-          } else {
-            alert("Ocorreu um erro durante a exportação");
-          }
-        } catch (error) {
-          console.error("Erro na exportação:", error);
-          alert("Ocorreu um erro durante a exportação");
-        } finally {
-          btnExportar.textContent = btnOriginalText;
-          btnExportar.disabled = false;
-        }
-      }
+    if (sucesso) {
+      alert(`${tipo} exportado com sucesso!`);
+    } else {
+      alert(`Erro ao exportar ${tipo}`);
+    }
+  } catch (erro) {
+    console.error(`Erro ao exportar ${tipo}:`, erro);
+    alert(`Erro inesperado ao exportar ${tipo}`);
+  } finally {
+    botao.textContent = textoOriginal;
+    botao.disabled = false;
+  }
+}
+
+document.getElementById("btnExportarExcel").addEventListener("click", () => exportarArquivo("Excel"));
+document.getElementById("btnExportarPDF").addEventListener("click", () => exportarArquivo("PDF"));
 
       function toggleEdicao(index) {
         const conteudo = document.getElementById(`conteudo-${index}`);
