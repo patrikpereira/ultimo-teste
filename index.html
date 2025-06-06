@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <!-- <script src="js/scripts.js" defer></script> -->
+    <title>Ordem de Servico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Ordem de Serviços - MSJR Rep.</h1>
+
+      <form id="formulario">
+        <label>Técnico / Equipe</label>
+        <input type="text" name="tecnicoEquipe" id="tecnicoEquipe" required />
+        <div class="checkbox-group">
+          <label>
+            <input
+              type="radio"
+              name="tipo"
+              value="orçamento"
+              id="tipoOrcamento"
+              onclick="toggleCheckbox(this)"
+              required
+            />
+            Orçamento
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="tipo"
+              value="execução"
+              id="tipoExecucao"
+              onclick="toggleCheckbox(this)"
+              required
+            />
+            Execução
+          </label>
+        </div>
+
+        <label>Data</label>
+        <input name="dataOrcamento" type="date" id="dataOrcamento" required />
+
+        <label>Nome do Cliente</label>
+        <input name="nomeCliente" id="cliente" required />
+
+        <label>Setor</label>
+        <input name="setor" required />
+
+        <label>Tipo de Equipamento</label>
+        <select name="tipoEquipamento" required>
+          <option value="">Selecione</option>
+          <option>ACJ</option>
+          <option>SPLIT</option>
+          <option>PISO TETO</option>
+          <option>SELF</option>
+          <option>FANCOIL</option>
+          <option>CHILLER</option>
+          <option>K7</option>
+          <option>PORTÁTIL</option>
+          <option>OUTROS (VIDE OBS)</option>
+        </select>
+
+        <label>Marca</label>
+        <select id="form" name="marca" required>
+          <option value="">Selecione</option>
+          <option>CARRIER</option>
+          <option>MIDEA</option>
+          <option>SPRINGER</option>
+          <option>YORK</option>
+          <option>LG</option>
+          <option>DAIKIN</option>
+          <option>ELECTROLUX</option>
+          <option>PHILCO</option>
+          <option>BRITANIA</option>
+          <option>GREE</option>
+          <option>AGRATTO</option>
+          <option>VIX</option>
+          <option>SAMSUNG</option>
+          <option>FUJITSU</option>
+          <option>TRANE</option>
+          <option>PANASONIC</option>
+          <option>HITACHI</option>
+          <option>CONSUL</option>
+          <option>KOMECO</option>
+          <option>COMFEE</option>
+          <option>MAXIFLEX</option>
+          <option>RINETTO</option>
+          <option>FONTAINE</option>
+          <option>VOGGA</option>
+          <option>ADMIRAL</option>
+          <option>OLIMPIA SPLENDID</option>
+          <option>ELGIN</option>
+          <option>TCL</option>
+          <option>TEMPSTAR</option>
+          <option>SANYO</option>
+          <option>TROCALOR</option>
+          <option>OUTROS (VIDE OBS)</option>
+        </select>
+
+        <label>BTU</label>
+        <select name="btu" required>
+          <option value="">Selecione</option>
+          <option>7.000</option>
+          <option>7.500</option>
+          <option>9.000</option>
+          <option>10.000</option>
+          <option>11.000</option>
+          <option>12.000</option>
+          <option>15.000</option>
+          <option>18.000</option>
+          <option>21.000</option>
+          <option>22.000</option>
+          <option>24.000</option>
+          <option>30.000</option>
+          <option>36.000</option>
+          <option>48.000</option>
+          <option>56.000</option>
+          <option>57.000</option>
+          <option>60.000</option>
+          <option>72.000</option>
+          <option>80.000</option>
+          <option>90.000</option>
+          <option>120.000</option>
+          <option>144.000</option>
+          <option>240.000</option>
+          <option>3TR</option>
+          <option>5TR</option>
+          <option>6TR</option>
+          <option>10TR</option>
+          <option>12TR</option>
+          <option>20TR</option>
+          <option>OUTROS (VIDE OBS)</option>
+        </select>
+
+        <label>N° da Maquina</label>
+        <input name="numeroMaquina" />
+
+        <div class="checkbox-group">
+          <label>
+            <input
+              type="radio"
+              name="tipoServico"
+              value="preventiva"
+              required
+            />
+            Preventiva
+          </label>
+          <label>
+            <input type="radio" name="tipoServico" value="corretiva" required />
+            Corretiva
+          </label>
+          <label>
+            <input type="radio" name="tipoServico" value="ambos" required />
+            Ambos
+          </label>
+        </div>
+
+        <div class="service-dropdown-container">
+          <label>Descrição do Serviço:</label>
+          <div class="service-dropdown">
+            <input
+              type="text"
+              id="busca-servico"
+              class="search-input"
+              placeholder="Digite para buscar serviços..."
+              autocomplete="off"
+            />
+            <div class="dropdown-content" id="dropdown-servicos">
+              <!-- Opções serão preenchidas dinamicamente -->
+            </div>
+          </div>
+          <div id="servicos-selecionados" class="servicos-selecionados"></div>
+        </div>
+        <div id="gas-container" style="margin-top: 10px; display: none">
+          <label for="busca-gas">Tipo de Gás</label required>
+          <div class="service-dropdown">
+            <input
+              type="text"
+              id="busca-gas"
+              class="search-input"
+              placeholder="Digite para buscar tipo de gás..."
+              autocomplete="off"
+              readonly
+            />
+            <div class="dropdown-content" id="dropdown-gas" for="busca-gas">
+              <div class="dropdown-item">R410</div>
+              <div class="dropdown-item">R22</div>
+              <div class="dropdown-item">R134</div>
+              <div class="dropdown-item">R32</div>
+              <div class="dropdown-item">OUTROS - VIDE OBS</div>
+            </div required>
+          </div>
+          <div id="gas-selecionado" class="servicos-selecionados"></div>
+        </div>
+
+        <label>Observacão</label>
+        <textarea name="observacao" style="resize: none; text-transform: uppercase;"></textarea>
+
+        <label>Responsável pelo acompanhamento</label>
+        <input name="responsavel" required />
+
+        <label>Assinatura do Cliente:</label>
+        <canvas
+          id="assinatura"
+          width="400"
+          height="150"
+          style="border: 1px solid var(--accent); border-radius: 5px"
+        ></canvas>
+        <br />
+        <button type="button" onclick="limparAssinatura()">
+          Limpar Assinatura
+        </button>
+
+        <button type="submit">Salvar Item</button>
+        <a href="pagina-edicao.html" id="linkGerenciar" class="botao-gerenciar" onclick="salvarTemporariosAntesDeSair()"
+          >Gerenciar Formulários Salvos</a
+        >
+      </form>
+      <p id="contador"></p>
+    </div>
+
+    <script>
+      function selecionarGas(nomeGas) {
+  const inputGas = document.getElementById("busca-gas");
+  inputGas.value = nomeGas; // Isso é crucial!
+}
+
+
+      
+
+      // Ao carregar a página, recupera os dados salvos
+      document.addEventListener("DOMContentLoaded", function() {
+        const dados = JSON.parse(localStorage.getItem("formularioTemporario"));
+        
+        if (dados) {
+          if (dados.tecnico) document.getElementById("tecnicoEquipe").value = dados.tecnico;
+          if (dados.cliente) document.getElementById("cliente").value = dados.cliente;
+          if (dados.data) document.getElementById("dataOrcamento").value = dados.data;
+          
+          // Restaura o tipo selecionado
+          if (dados.tipo) {
+            const radio = document.querySelector(`input[name="tipo"][value="${dados.tipo}"]`);
+            if (radio) {
+              radio.checked = true;
+              // Desabilita os radios
+              document.querySelectorAll('input[name="tipo"]').forEach(r => {
+                r.disabled = true;
+              });
+            }
+          }
+        }
+        
+        
+        // Configura o evento de clique no link de gerenciamento
+        document.getElementById("linkGerenciar").addEventListener("click", function(event) {
+          event.preventDefault();
+          
+          const dadosAtuais = {
+    tecnico: document.getElementById("tecnicoEquipe").value,
+    cliente: document.getElementById("cliente").value,
+    data: document.getElementById("dataOrcamento").value
+  };
+
+          localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+
+  window.location.href = this.href;
+        });
+      });
+
+
+      
+    // Remova a variável global tipoTravado e substitua por:
+let tipoTravado = true;
+
+// Modifique a função toggleCheckbox para:
+// Modifique a função toggleCheckbox para:
+  function toggleCheckbox(radio) {
+      tipoTravado = false;
+      
+      // Salva o estado no localStorage
+      localStorage.setItem('tipoTravado', 'true');
+      localStorage.setItem('tipoSelecionado', radio.value);
+
+      // Desabilita os radio buttons
+      document.querySelectorAll('input[name="tipo"]').forEach(r => {
+          r.disabled = true;
+      });
+
+      // Remove aviso anterior se existir
+      const avisoAntigo = document.getElementById('aviso-tipo');
+      if (avisoAntigo) avisoAntigo.remove();
+      
+      // Adiciona aviso visual
+      const aviso = document.createElement('div');
+      aviso.id = 'aviso-tipo';
+      aviso.textContent = '';
+      aviso.style.color = '#ff0000';
+      aviso.style.margin = '10px 0';
+      aviso.style.fontWeight = 'bold';
+      
+      const checkboxGroup = document.querySelector('.checkbox-group');
+      checkboxGroup.appendChild(aviso);
+  }
+
+  // Verifica ao carregar a página se deve travar os radios
+  document.addEventListener("DOMContentLoaded", function() {
+      // Verifica se há um tipo travado no localStorage
+      const travado = localStorage.getItem('tipoTravado') === 'true';
+      const tipoSalvo = localStorage.getItem('tipoSelecionado');
+      
+      if (travado && tipoSalvo) {
+          tipoTravado = true;
+          
+          // Marca o radio correto
+          const radio = document.querySelector(`input[name="tipo"][value="${tipoSalvo}"]`);
+          if (radio) {
+              radio.checked = true;
+              
+              // Desabilita todos os radios
+              document.querySelectorAll('input[name="tipo"]').forEach(r => {
+                  r.disabled = true;
+              });
+              
+              // Adiciona aviso visual
+              const aviso = document.createElement('div');
+              aviso.id = 'aviso-tipo';
+              aviso.textContent = '';
+              aviso.style.color = '#ff0000';
+              aviso.style.margin = '10px 0';
+              aviso.style.fontWeight = 'bold';
+              
+              const checkboxGroup = document.querySelector('.checkbox-group');
+              // Remove aviso anterior se existir
+              const avisoAntigo = document.getElementById('aviso-tipo');
+              if (avisoAntigo) avisoAntigo.remove();
+              
+              checkboxGroup.appendChild(aviso);
+          }
+      }
+      
+      // Configura o evento de clique no link de gerenciamento
+      document.getElementById("linkGerenciar").addEventListener("click", function(event) {
+          event.preventDefault();
+          
+          // Salva os dados atuais antes de navegar
+          const dadosAtuais = {
+              tecnico: document.getElementById("tecnicoEquipe").value,
+              cliente: document.getElementById("cliente").value,
+              data: document.getElementById("dataOrcamento").value,
+              tipo: document.querySelector('input[name="tipo"]:checked')?.value
+          };
+
+          localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+          window.location.href = this.href;
+      });
+  });
+
+  // Limpa o travamento quando a página é recarregada
+  window.addEventListener('beforeunload', function() {
+      if (performance.navigation.type === 1) { // 1 significa reload
+          localStorage.removeItem('tipoTravado');
+          localStorage.removeItem('tipoSelecionado');
+      }
+  });
+
+function verificarObservacaoObrigatoria() {
+  const campos = [
+    { campo: document.querySelector('select[name="tipoEquipamento"]'), label: "Tipo de Equipamento" },
+    { campo: document.querySelector('select[name="marca"]'), label: "Marca" },
+    { campo: document.querySelector('select[name="btu"]'), label: "BTU" }
+  ];
+
+  const obsField = document.querySelector('textarea[name="observacao"]');
+  let outrosSelecionado = false;
+
+  campos.forEach(({ campo, label }) => {
+    const parent = campo.parentElement;
+    const existingWarning = parent.querySelector('.aviso-outros');
+
+    if (campo.value === "OUTROS (VIDE OBS)") {
+      outrosSelecionado = true;
+
+      // Adiciona o aviso se ainda não existir
+      if (!existingWarning) {
+        const span = document.createElement("span");
+        span.className = "aviso-outros";
+        span.textContent = ` ⚠️ Especifique em Observação (${label})`;
+        span.style.color = "red";
+        span.style.fontSize = "12px";
+        span.style.marginLeft = "8px";
+        parent.appendChild(span);
+      }
+    } else {
+      // Remove o aviso se não for "OUTROS"
+      if (existingWarning) existingWarning.remove();
+    }
+  });
+
+  // Exige Observação se houver "OUTROS"
+  if (outrosSelecionado) {
+    obsField.setAttribute("required", "required");
+    obsField.style.border = "1px solid red";
+  } else {
+    obsField.removeAttribute("required");
+    obsField.style.border = "";
+  }
+}
+
+
+// Modifique o DOMContentLoaded para:
+document.addEventListener("DOMContentLoaded", function () {
+  // Campos que podem ter a opção "OUTROS (VIDE OBS)"
+  const camposObservacao = [
+    document.querySelector('select[name="tipoEquipamento"]'),
+    document.querySelector('select[name="marca"]'),
+    document.querySelector('select[name="btu"]')
+  ];
+
+  // Adiciona o evento de change a cada campo
+  camposObservacao.forEach(campo => {
+    if (campo) {
+      campo.addEventListener("change", verificarObservacaoObrigatoria);
+    }
+
+  });
+
+
+  // Adiciona também ao campo de texto de observação para validação em tempo real
+  const obsField = document.querySelector('textarea[name="observacao"]');
+  if (obsField) {
+    obsField.addEventListener("input", verificarObservacaoObrigatoria);
+  }
+    
+    // Se já está travado na sessão atual (sem refresh)
+    if (tipoTravado) {
+        const tipoSalvo = document.querySelector('input[name="tipo"]:checked')?.value;
+        if (tipoSalvo) {
+            // Desabilita os radio buttons
+            document.querySelectorAll('input[name="tipo"]').forEach(r => {
+                r.disabled = true;
+            });
+            
+            // Adiciona aviso visual
+            const aviso = document.createElement('div');
+            aviso.id = 'aviso-tipo';
+            aviso.style.color = '#ff0000';
+            aviso.style.margin = '10px 0';
+            aviso.style.fontWeight = 'bold';
+            
+            const checkboxGroup = document.querySelector('.checkbox-group');
+            // Remove aviso anterior se existir
+            const avisoAntigo = document.getElementById('aviso-tipo');
+            if (avisoAntigo) avisoAntigo.remove();
+            
+            checkboxGroup.appendChild(aviso);
+        }
+    }
+});
+      
+      // Função para mostrar o dropdown do gás
+      function mostrarDropdownGas() {
+        const dropdown = document.getElementById("dropdown-gas");
+        dropdown.style.display = "block";
+        dropdown.innerHTML = "";
+
+        const tiposGas = ["R410", "R22", "R134","R32", "OUTRO - VIDE OBS"];
+
+        tiposGas.forEach((tipo) => {
+          const option = document.createElement("div");
+          option.className = "service-option";
+          option.textContent = tipo;
+          option.addEventListener("click", () => {
+            selecionarTipoGas(tipo);
+          });
+          dropdown.appendChild(option);
+        });
+      }
+
+      // Função para selecionar o tipo de gás
+      function selecionarTipoGas(tipo) {
+        const gasSelecionado = document.getElementById("gas-selecionado");
+        gasSelecionado.innerHTML = "";
+
+        const div = document.createElement("div");
+        div.className = "servico-selecionado";
+        div.textContent = tipo;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "×";
+        btn.className = "remover-servico";
+        btn.onclick = () => {
+          gasSelecionado.innerHTML = "";
+          verificarRecargaGas();
+        };
+
+        div.appendChild(btn);
+        gasSelecionado.appendChild(div);
+        document.getElementById("busca-gas").value = "";
+        document.getElementById("dropdown-gas").style.display = "none";
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Configuração do dropdown de gás
+        const buscaGas = document.getElementById("busca-gas");
+        const dropdownGas = document.getElementById("dropdown-gas");
+
+        // Evento de focus
+        buscaGas.addEventListener("focus", function () {
+          mostrarDropdownGas();
+        });
+
+        // Evento de clique
+        buscaGas.addEventListener("click", function () {
+          mostrarDropdownGas();
+        });
+
+        // Evento na label
+        document
+          .querySelector('label[for="busca-gas"]')
+          ?.addEventListener("click", function () {
+            buscaGas.focus();
+            mostrarDropdownGas();
+          });
+
+        // Evento de input para filtro
+        buscaGas.addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const options = dropdownGas.querySelectorAll(".service-option");
+
+          options.forEach((option) => {
+            const texto = option.textContent.toLowerCase();
+            option.style.display = texto.includes(termo) ? "block" : "none";
+          });
+        });
+
+        // Fecha dropdown se clicar fora
+        document.addEventListener("click", function (e) {
+          if (!document.getElementById("gas-container").contains(e.target)) {
+            dropdownGas.style.display = "none";
+          }
+        });
+      });
+
+      // Configuração dos radios de tipo de serviço (novo código)
+      document
+        .querySelectorAll('input[name="tipoServico"]')
+        .forEach((radio) => {
+          radio.addEventListener("change", function () {
+            selectedServiceType = this.value;
+            selectedServicesArray = [];
+            updateSelectedServicesList();
+            setupServiceSelection();
+            verificarRecargaGas();
+          });
+        });
+
+      function mostrarDropdown() {
+        const dropdown = document.getElementById("dropdown-servicos");
+        dropdown.style.display = "block";
+        dropdown.innerHTML = ""; // Limpa opções anteriores
+
+        const servicos = opcoesServico[selectedServiceType];
+        if (servicos.length === 0) {
+          const emptyOption = document.createElement("div");
+          emptyOption.className = "service-option";
+          emptyOption.textContent = "Nenhum serviço disponível";
+          dropdown.appendChild(emptyOption);
+          return;
+        }
+
+        servicos.forEach((servico) => {
+          const option = document.createElement("div");
+          option.className = "service-option";
+          option.textContent = servico;
+          option.addEventListener("click", () => {
+            if (!selectedServicesArray.includes(servico)) {
+              selectedServicesArray.push(servico);
+              updateSelectedServicesList();
+            }
+            document.getElementById("busca-servico").value = "";
+            dropdown.style.display = "none";
+          });
+          dropdown.appendChild(option);
+        });
+      }
+
+      // Evento de foco no input de busca
+      document
+        .getElementById("busca-servico")
+        .addEventListener("focus", mostrarDropdown);
+
+      // Evento de input para busca filtrada
+      document
+        .getElementById("busca-servico")
+        .addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const dropdown = document.getElementById("dropdown-servicos");
+          const options = dropdown.querySelectorAll(".service-option");
+
+          options.forEach((option) => {
+            const texto = option.textContent.toLowerCase();
+            option.style.display = texto.includes(termo) ? "block" : "none";
+          });
+        });
+      // Opções para cada tipo de serviço
+      const opcoesServico = {
+        preventiva: [
+          "MANUTENÇÃO PREVENTIVA DA CONDENSADORA",
+          "MANUTENÇÃO PREVENTIVA DA EVAPORADORA",
+          "MANUTENÇÃO PREVENTIVA - LIMPEZA DE FILTROS",
+        ],
+        corretiva: [
+          "REVISÃO ELÉTRICA",
+          "RECARGA DE GÁS 1KG",
+          "RECARGA DE GÁS 2KGS",
+          "RECARGA DE GÁS 3KGS",
+          "RECARGA DE GÁS 4KGS",
+          "RECARGA DE GÁS 5KGS",
+          "RECARGA DE GÁS 6KGS",
+          "RECARGA DE GÁS 7KGS",
+          "RECARGA DE GÁS 8KGS",
+          "RECARGA DE GÁS 9KGS",
+          "RECARGA DE GÁS 10KG",
+          "TROCA DE CAPACITOR",
+          "TROCA DE TERMOSTATO",
+          "TROCA DE SENSOR DE TEMPERATURA",
+          "TROCA DE CONTROLE REMOTO",
+          "TROCA DA PLACA ELETRONICA RECEPTORA",
+          "TROCA DA PLACA ELETRONICA DA CONDENSADORA",
+          "TROCA DA PLACA ELETRONICA DA EVAPORADORA",
+          "TROCA DA PLACA ELETRONICA UNIVERSAL",
+          "TROCA DO COMPRESSOR",
+          "TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA",
+          "TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA EVAPORADORA",
+          "TROCA DO CONJUNTO DE FILTROS",
+          "TROCA DAS ALETAS",
+          "TROCA DA VÁLVULA DE EXPANSÃO",
+          "TROCA DA HÉLICE",
+          "BOMBA DE DRENO",
+          "INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)",
+          "DESISTALAÇÃO DO APARELHO",
+          "TROCA DA CHAVE INVERSORA",
+          "TROCA DO FILTRO SECADOR",
+          "TROCA DO GABINETE",
+          "TROCA DO MOTOR DA ALETA",
+          "TROCA DE RELÊ",
+          "TROCA DA TURBINA",
+          "TROCA DO MOTOR DA TURBINA",
+          "TROCA DA GRADE DA CONDENSADORA",
+          "TROCA DA CALHA",
+          "TROCA DA CHAVE TERMOSTÁTICA",
+          "TROCA DA CÂMARA DO VENTILADOR",
+          "TROCA DA MANGUEIRA DO DRENO",
+          "TROCA DO PAINEL",
+          "TROCA DO SENSOR DE DEGELO",
+          "TROCA DO DUTO DE AR",
+          "TROCA DO BOTÃO",
+          "TROCA DOS CALCOS DE BORRACHA",
+          "TROCA DO SUPORTE DA CONDENSADORA",
+          "TROCA DO SUPORTE DA EVAPORADORA",
+          "TROCA DO CAPILAR",
+          "TROCA DAS CONEXÕES DE COBRE",
+          "TROCA DO PISTÃO",
+          "TROCA DA CHAVE DE FLUXO",
+          "TROCA DE CONTROLE DE TEMPERATURA",
+          "TROCA DA BOBINA SOLENÓIDE",
+          "TROCA DA CHAVE SELETORA",
+          "TROCA DO PRESSOSTATO",
+          "TROCA DA VÁLVULA DE SERVIÇO",
+          "TROCA DA CONTATORA",
+          "TROCA DA BOBINA DA VÁLVULA",
+          "TROCA DO PAINEL DE CONTROLE",
+          "APLICAÇÃO DE NITROGÊNIO 1KG",
+          "APLICAÇÃO DE NITROGÊNIO 2KG",
+          "APLICAÇÃO DE NITROGÊNIO 3KG",
+          "SOLDA PARA SANAR VAZAMENTO",
+          "APERTO DAS PORCAS",
+          "DESMONTAGEM PARCIAL DA EVAPORADORA",
+          "DESMONTAGEM PARCIAL DA CONDENSADORA",
+          "OUTROS (VIDE OBS)",
+        ],
+        ambos: [
+          "MANUTENÇÃO PREVENTIVA DA CONDENSADORA",
+          "MANUTENÇÃO PREVENTIVA DA EVAPORADORA",
+          "MANUTENÇÃO PREVENTIVA - LIMPEZA DE FILTROS",
+          "REVISÃO ELÉTRICA",
+          "RECARGA DE GÁS 1KG",
+          "RECARGA DE GÁS 2KGS",
+          "RECARGA DE GÁS 3KGS",
+          "RECARGA DE GÁS 4KGS",
+          "RECARGA DE GÁS 5KGS",
+          "RECARGA DE GÁS 6KGS",
+          "RECARGA DE GÁS 7KGS",
+          "RECARGA DE GÁS 8KGS",
+          "RECARGA DE GÁS 9KGS",
+          "RECARGA DE GÁS 10KG",
+          "TROCA DE CAPACITOR",
+          "TROCA DE TERMOSTATO",
+          "TROCA DE SENSOR DE TEMPERATURA",
+          "TROCA DE CONTROLE REMOTO",
+          "TROCA DA PLACA ELETRONICA RECEPTORA",
+          "TROCA DA PLACA ELETRONICA DA CONDENSADORA",
+          "TROCA DA PLACA ELETRONICA DA EVAPORADORA",
+          "TROCA DA PLACA ELETRONICA UNIVERSAL",
+          "TROCA DO COMPRESSOR",
+          "TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA",
+          "TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA EVAPORADORA",
+          "TROCA DO CONJUNTO DE FILTROS",
+          "TROCA DAS ALETAS",
+          "TROCA DA VÁLVULA DE EXPANSÃO",
+          "TROCA DA HÉLICE",
+          "BOMBA DE DRENO",
+          "INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)",
+          "DESISTALAÇÃO DO APARELHO",
+          "TROCA DA CHAVE INVERSORA",
+          "TROCA DO FILTRO SECADOR",
+          "TROCA DO GABINETE",
+          "TROCA DO MOTOR DA ALETA",
+          "TROCA DE RELÊ",
+          "TROCA DA TURBINA",
+          "TROCA DO MOTOR DA TURBINA",
+          "TROCA DA GRADE DA CONDENSADORA",
+          "TROCA DA CALHA",
+          "TROCA DA CHAVE TERMOSTÁTICA",
+          "TROCA DA CÂMARA DO VENTILADOR",
+          "TROCA DA MANGUEIRA DO DRENO",
+          "TROCA DO PAINEL",
+          "TROCA DO SENSOR DE DEGELO",
+          "TROCA DO DUTO DE AR",
+          "TROCA DO BOTÃO",
+          "TROCA DOS CALCOS DE BORRACHA",
+          "TROCA DO SUPORTE DA CONDENSADORA",
+          "TROCA DO SUPORTE DA EVAPORADORA",
+          "TROCA DO CAPILAR",
+          "TROCA DAS CONEXÕES DE COBRE",
+          "TROCA DO PISTÃO",
+          "TROCA DA CHAVE DE FLUXO",
+          "TROCA DE CONTROLE DE TEMPERATURA",
+          "TROCA DA BOBINA SOLENÓIDE",
+          "TROCA DA CHAVE SELETORA",
+          "TROCA DO PRESSOSTATO",
+          "TROCA DA VÁLVULA DE SERVIÇO",
+          "TROCA DA CONTATORA",
+          "TROCA DA BOBINA DA VÁLVULA",
+          "TROCA DO PAINEL DE CONTROLE",
+          "APLICAÇÃO DE NITROGÊNIO 1KG",
+          "APLICAÇÃO DE NITROGÊNIO 2KG",
+          "APLICAÇÃO DE NITROGÊNIO 3KG",
+          "SOLDA PARA SANAR VAZAMENTO",
+          "APERTO DAS PORCAS",
+          "DESMONTAGEM PARCIAL DA EVAPORADORA",
+          "DESMONTAGEM PARCIAL DA CONDENSADORA",
+          "OUTROS (VIDE OBS)",
+        ],
+      };
+
+      function verificarRecargaGas() {
+  const gasContainer = document.getElementById("gas-container");
+  const buscaGas = document.getElementById("busca-gas");
+
+  // Sempre exibe o campo de gás
+  gasContainer.style.display = "block";
+
+  // Torna o campo obrigatório
+  buscaGas.setAttribute("required", "required");
+}
+
+      // Variáveis globais
+      let selectedServiceType = "preventiva";
+      let selectedServicesArray = [];
+
+      // Inicialização
+      document.addEventListener("DOMContentLoaded", function () {
+        // Configurar o sistema de seleção de serviços
+        setupServiceSelection();
+
+        // Configurar os radios para atualizar os serviços
+        document
+          .querySelectorAll('input[name="tipoServico"]')
+          .forEach((radio) => {
+            radio.addEventListener("change", function () {
+              selectedServiceType = this.value;
+              selectedServicesArray = []; // Limpa os serviços selecionados ao mudar o tipo
+              updateSelectedServicesList();
+              setupServiceSelection(); // Recarrega os serviços disponíveis
+            });
+          });
+      });
+
+      // Configura o sistema de seleção de serviços
+      function setupServiceSelection() {
+        const inputBusca = document.getElementById("busca-servico");
+        const dropdown = document.getElementById("dropdown-servicos");
+        const containerSelecionados = document.getElementById(
+          "servicos-selecionados"
+        );
+
+        // Preencher dropdown com opções
+        function preencherDropdown(servicos) {
+          dropdown.innerHTML = "";
+          servicos.forEach((servico) => {
+            const div = document.createElement("div");
+            div.className = "service-option";
+            div.textContent = servico;
+            div.addEventListener("click", () => {
+              adicionarServicoSelecionado(servico);
+              inputBusca.value = "";
+              dropdown.style.display = "none";
+            });
+            dropdown.appendChild(div);
+          });
+        }
+
+        // Adicionar serviço selecionado à lista
+        function adicionarServicoSelecionado(servico) {
+          if (!selectedServicesArray.includes(servico)) {
+            selectedServicesArray.push(servico);
+            updateSelectedServicesList();
+          }
+        }
+
+        // Filtro de busca
+        inputBusca.addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const servicosDisponiveis = opcoesServico[selectedServiceType];
+          const filtrados = servicosDisponiveis.filter((servico) =>
+            servico.toLowerCase().includes(termo)
+          );
+          preencherDropdown(filtrados);
+          dropdown.style.display = filtrados.length ? "block" : "none";
+        });
+
+        // Mostrar dropdown ao focar no input
+        inputBusca.addEventListener("focus", function () {
+          preencherDropdown(opcoesServico[selectedServiceType]);
+          dropdown.style.display = "block";
+        });
+
+        // Ocultar dropdown ao clicar fora
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest(".service-dropdown")) {
+            dropdown.style.display = "none";
+          }
+        });
+      }
+
+      // Atualiza a lista de serviços selecionados
+      function updateSelectedServicesList() {
+        const containerSelecionados = document.getElementById(
+          "servicos-selecionados"
+        );
+        containerSelecionados.innerHTML = "";
+
+        if (selectedServicesArray.length === 0) {
+          return;
+        }
+
+        selectedServicesArray.forEach((servico, index) => {
+          const div = document.createElement("div");
+          div.className = "servico-selecionado";
+          div.dataset.servico = servico;
+          div.innerHTML = `
+                  ${servico}
+                  <button type="button" class="remover-servico">×</button>
+                `;
+
+          // Adicionar evento de remoção
+          div
+            .querySelector(".remover-servico")
+            .addEventListener("click", () => {
+              selectedServicesArray.splice(index, 1);
+              updateSelectedServicesList();
+            });
+
+          containerSelecionados.appendChild(div);
+        });
+
+        verificarRecargaGas();
+      }
+
+      // Modifique a função de submit para incluir a validação do gás
+document.getElementById("formulario").addEventListener("submit", function(e) {
+  e.preventDefault();
+  
+  const gasSelecionado = document.getElementById("gas-selecionado")?.textContent.replace("×", "").trim();
+
+  if (!gasSelecionado) {
+    alert("Selecione o tipo de gás.");
+    return;
+  }
+
+  // Verificação do tipo de serviço
+  const tipo = document.querySelector('input[name="tipo"]:checked').value;
+  
+  // Verificação do campo técnicoEquipe
+  const tecnicoEquipe = this.tecnicoEquipe.value;
+  if (!tecnicoEquipe) {
+    alert("Por favor, preencha o campo 'Técnico / Equipe'");
+    return;
+  }
+
+  // Verificação se há serviços selecionados
+  if (selectedServicesArray.length === 0) {
+    alert("Por favor, selecione pelo menos um serviço!");
+    return;
+  }
+
+  // Processa a observação incluindo SEMPRE o tipo de gás
+  let observacao = this.observacao.value || "";
+  
+  // Adiciona o tipo de gás à observação (formatado de forma clara)
+  observacao = observacao 
+    ? `${observacao} | Tipo de Gás: ${gasSelecionado}`
+    : `Tipo de Gás: ${gasSelecionado}`;
+
+  // Verificação para OUTROS (VIDE OBS)
+  const camposObservacao = [
+    this.tipoEquipamento,
+    this.marca,
+    this.btu
+  ];
+
+  const outrosSelecionado = camposObservacao.some(campo => 
+    campo.value === "OUTROS (VIDE OBS)"
+  );
+
+  if (outrosSelecionado && !this.observacao.value.trim()) {
+    alert("Por favor, preencha o campo Observação quando selecionar 'OUTROS (VIDE OBS)'");
+    this.observacao.focus();
+    return;
+  }
+
+  // Preparar dados para salvar
+  const data = {
+    tipo: tipo,
+    tecnicoEquipe: tecnicoEquipe,
+    Cliente: this.nomeCliente.value,
+    Setor: this.setor.value,
+    tipoEquipamento: this.tipoEquipamento.value,
+    Marca: this.marca.value,
+    btu: this.btu.value,
+    dataorçamento: this.dataOrcamento.value?.split("-").reverse().join("/") || "",
+    descricaoServico: selectedServicesArray.join(", "),
+    observacao: observacao,
+    tipoGas: gasSelecionado,
+    responsavel: this.responsavel.value,
+    numeroMaquina: this.numeroMaquina.value,
+    assinatura: tipo === "execução" ? document.getElementById("assinatura").toDataURL("image/png") : null
+  };
+
+  // Salva no localStorage
+  const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
+  formulariosSalvos.push(data);
+  localStorage.setItem("formularios", JSON.stringify(formulariosSalvos));
+
+  // Salva os dados temporários
+  const dadosTemporarios = {
+    tecnicoEquipe: tecnicoEquipe,
+    nomeCliente: this.nomeCliente.value,
+    dataOrcamento: this.dataOrcamento.value,
+    tipo: tipo // Adicionado para manter o tipo entre navegações
+  };
+  localStorage.setItem("formularioTemporario", JSON.stringify(dadosTemporarios));
+
+  // Limpa os campos
+  this.reset();
+  selectedServicesArray = [];
+  updateSelectedServicesList();
+  limparAssinatura();
+  document.getElementById("gas-selecionado").innerHTML = "";
+
+  // Mantém os campos principais preenchidos
+  this.tecnicoEquipe.value = dadosTemporarios.tecnicoEquipe;
+  this.nomeCliente.value = dadosTemporarios.nomeCliente;
+  this.dataOrcamento.value = dadosTemporarios.dataOrcamento;
+  
+  // Mantém o tipo selecionado e travado
+  const radioTipo = document.getElementById(`tipo${tipo === "orçamento" ? "Orcamento" : "Execucao"}`);
+  if (radioTipo) {
+    radioTipo.checked = true;
+    document.querySelectorAll('input[name="tipo"]').forEach(r => {
+      r.disabled = true;
+    });
+  }
+
+  // Atualiza contador
+  document.getElementById("contador").textContent = `Itens adicionados á O.S: ${formulariosSalvos.length}`;
+  alert("Item salvo com sucesso! Pronto para adicionar novo item.");
+});
+      // Código da assinatura (mantido igual)
+      const canvas = document.getElementById("assinatura");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        let desenhando = false;
+
+        // Eventos de desenho (mantidos iguais)
+        canvas.addEventListener("mousedown", () => (desenhando = true));
+        canvas.addEventListener("mouseup", () => (desenhando = false));
+        canvas.addEventListener("mouseout", () => (desenhando = false));
+        canvas.addEventListener("mousemove", desenhar);
+
+        // Versão mobile
+        canvas.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          desenhando = true;
+        });
+        canvas.addEventListener("touchend", () => (desenhando = false));
+        canvas.addEventListener("touchmove", desenharMobile);
+
+        function desenhar(e) {
+    if (!desenhando) return;
+    
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#000";
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY); // Começa na posição anterior
+    ctx.lineTo(x, y); // Conecta à nova posição
+    ctx.stroke();
+    
+    // Atualiza a posição anterior
+    lastX = x;
+    lastY = y;
+}
+
+canvas.addEventListener("mousedown", (e) => {
+    desenhando = true;
+    const rect = canvas.getBoundingClientRect();
+    lastX = e.clientX - rect.left;
+    lastY = e.clientY - rect.top;
+});
+
+        function desenharMobile(e) {
+    if (!desenhando) return;
+    e.preventDefault(); // Evita scroll acidental
+    
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#000";
+    
+    // Reinicia o caminho e conecta à posição anterior (para traço contínuo)
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY); // Começa na posição anterior
+    ctx.lineTo(x, y); // Desenha até a nova posição
+    ctx.stroke();
+    
+    // Atualiza a posição anterior
+    lastX = x;
+    lastY = y;
+}
+
+// Eventos para iniciar/detectar o toque
+canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    desenhando = true;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    lastX = touch.clientX - rect.left; // Armazena a posição inicial
+    lastY = touch.clientY - rect.top;
+});
+
+canvas.addEventListener("touchend", () => {
+    desenhando = false;
+});
+
+        window.limparAssinatura = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.beginPath();
+        };
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const link = document.getElementById("linkGerenciar");
+
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+
+        // Salva os dados atuais no localStorage antes de sair
+  const dadosAtuais = {
+    tecnico: document.getElementById("tecnicoEquipe").value,
+    data: document.getElementById("dataOrcamento").value,
+    cliente: document.getElementById("cliente").value
+  };
+
+  localStorage.setItem("formularioTemporario", JSON.stringify(dadosAtuais));
+  
+  // Redireciona para a página de edição
+  window.location.href = this.href;
+        });
+
+        // Ao carregar, repopula o formulário
+        const dadosTemporarios = JSON.parse(localStorage.getItem("formularioTemporario"));
+if (dadosTemporarios) {
+  if (dadosTemporarios.tecnico)
+    document.getElementById("tecnicoEquipe").value = dadosTemporarios.tecnico;
+  if (dadosTemporarios.cliente)
+    document.getElementById("cliente").value = dadosTemporarios.cliente;
+  if (dadosTemporarios.data)
+    document.getElementById("dataOrcamento").value = dadosTemporarios.data;
+}
+      });
+
+
+  window.addEventListener("DOMContentLoaded", () => {
+    // Apaga os dados temporários se for um reload (F5)
+    // if (performance.navigation.type === 1) {
+    //   localStorage.removeItem("formularioTemporario");
+    // }
+
+    // Recupera os dados temporários se existirem
+    const dadosTemp = JSON.parse(localStorage.getItem("formularioTemporario"));
+    if (dadosTemp) {
+      const tecnicoInput = document.getElementById("tecnicoEquipe");
+      const clienteInput = document.getElementById("cliente");
+      const dataInput = document.getElementById("dataOrcamento");
+
+      if (tecnicoInput) tecnicoInput.value = dadosTemp.tecnicoEquipe || "";
+      if (clienteInput) clienteInput.value = dadosTemp.nomeCliente || "";
+      if (dataInput) dataInput.value = dadosTemp.dataOrcamento || "";
+    }
+
+  });
+
+  window.addEventListener("load", () => {
+    // Se a navegação foi um reload (F5)
+    if (performance.navigation.type === 1) {
+      localStorage.removeItem("formularioTemporario");
+    }
+
+    // Se quiser popular os campos com os dados temporários (navegação interna)
+    const dadosTemp = JSON.parse(localStorage.getItem("formularioTemporario"));
+    if (dadosTemp) {
+      document.getElementById("tecnicoEquipe").value = dadosTemp.tecnicoEquipe || "";
+      document.getElementById("cliente").value = dadosTemp.nomeCliente || "";
+      document.getElementById("dataOrcamento").value = dadosTemp.dataOrcamento || "";
+    }
+  });
+
+  // Função para salvar dados temporários
+      function salvarDadosTemporarios() {
+        const dadosTemporarios = {
+          tecnico: document.getElementById("tecnicoEquipe").value,
+          cliente: document.getElementById("cliente").value,
+          data: document.getElementById("dataOrcamento").value,
+        };
+        localStorage.setItem("formularioTemporario", JSON.stringify(dadosTemporarios));
+      }
+    </script>
+  </body>
+</html>

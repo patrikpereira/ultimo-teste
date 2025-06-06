@@ -1,0 +1,257 @@
+:root {
+  --bg-color: #1e1e2f;
+  --form-bg: #fff;
+  --input-bg: #fff;
+  --accent: blue;
+  --text-color: #e0ffe0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.container {
+  background-color: var(--form-bg);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  max-width: 700px;
+  width: 100%;
+  animation: fadeIn 0.4s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #000;
+  font-size: 1.8rem;
+}
+
+label {
+  margin-top: 12px;
+  display: block;
+  color: black;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+textarea,
+button,
+.botao-gerenciar {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  background-color: var(--input-bg);
+  color: #000;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #4494f0d5;
+  color: #000;
+  font-weight: bold;
+  margin-top: 18px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0501e0;
+  cursor: pointer;
+}
+
+.checkbox-group {
+  display: flex;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.checkbox-group label {
+  display: flex;
+  font-size: 0.95rem;
+}
+
+.tipoServico {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.tipoServico label {
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.tipoServico input[type="radio"] {
+  margin-right: 5px;
+}
+
+.botao-gerenciar {
+  background-color: #4494f0d5;
+  color: #000;
+  font-weight: bold;
+  margin-top: 18px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  padding-left: 35%;
+  text-decoration: none;
+}
+
+.botao-gerenciar:hover {
+  background-color: #0501e0;
+  cursor: pointer;
+}
+
+@media (max-width: 425px) {
+  .botao-gerenciar {
+    background-color: #4494f0d5;
+    color: #000;
+    font-weight: bold;
+    margin-top: 18px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    padding-left: 20%;
+    text-decoration: none;
+  }
+
+  .botao-gerenciar:hover {
+    background-color: #0501e0;
+    cursor: pointer;
+  }
+}
+
+/* Estilos melhorados para o dropdown de serviços */
+.service-dropdown-container {
+  margin-bottom: 20px;
+}
+
+.service-dropdown {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Estilo atualizado para o campo de busca */
+.search-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--accent); /* Cinza quando não selecionado */
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  border-color: #0501e0; /* Azul apenas quando em foco */
+  outline: none;
+  box-shadow: 0 0 0 1px #2196f3; /* Sombra sutil azul quando em foco */
+}
+
+/* Mantenha o resto dos estilos como estava */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+}
+
+.service-option {
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+}
+
+.service-option:last-child {
+  border-bottom: none;
+}
+
+.service-option:hover {
+  background-color: #f5f5f5;
+}
+
+.servicos-selecionados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.servico-selecionado {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #e8f5e9;
+  border-radius: 20px;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.remover-servico {
+  margin-left: 8px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 0;
+}
+
+.remover-servico:hover {
+  background-color: #d32f2f;
+}
+
+/* Ajuste para quando não há serviços selecionados */
+.servicos-selecionados:empty::after {
+  content: "Nenhum serviço selecionado";
+  color: #888;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.assinatura-required {
+  color: red;
+  font-weight: bold;
+}
+.assinatura-container {
+  margin-top: 10px;
+}

@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Gerenciar Ordens de Serviço</title>
+    <link rel="stylesheet" href="css/pagina-edicao.css" />
+    <script src="js/scripts.js" defer></script>
+    <script src="/js/pwa.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+      /* Reset e estilos base */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      #nomeArquivo {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        flex-grow: 1;
+      }
+
+      @media (max-width: 768px) {
+        .form-actions {
+          flex-direction: column;
+        }
+
+        #nomeArquivo {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+      }
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+
+      /* Container principal */
+      .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      /* Botões e ações */
+      .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background-color: #2196f3;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #0b7dda;
+      }
+
+      .btn-danger {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #da190b;
+      }
+
+      .btn-secondary {
+        background-color: #555;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #333;
+      }
+
+      .btn-success {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background-color: #3e8e41;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+      }
+      /* Itens do formulário */
+      .formulario-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: white;
+      }
+
+      .formulario-cabecalho {
+        background-color: #f5f5f5;
+        padding: 12px 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: background-color 0.3s;
+        cursor: default;
+      }
+
+      .formulario-cabecalho h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        cursor: default;
+        flex-grow: 1;
+      }
+
+      .acoes {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .btn-acao {
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+
+      .btn-editar {
+        background-color: #2196f3;
+        color: white;
+      }
+
+      .btn-apagar {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .formulario-conteudo {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, padding 0.3s ease;
+        background-color: white;
+      }
+
+      .formulario-conteudo.aberto {
+        padding: 15px;
+        max-height: none;
+        transition: max-height 0.5s ease-in, padding 0.3s ease;
+      }
+
+      /* Formulário de edição */
+      form[id^="form-edicao-"] {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 15px;
+      }
+
+      form[id^="form-edicao-"] > div {
+        margin-bottom: 10px;
+      }
+
+      form[id^="form-edicao-"] label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+      }
+
+      form[id^="form-edicao-"] input[type="text"],
+      form[id^="form-edicao-"] input[type="date"],
+      form[id^="form-edicao-"] select,
+      form[id^="form-edicao-"] textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      form[id^="form-edicao-"] textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .btn-atualizar {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      /* Dropdown de serviços */
+      .service-dropdown-container {
+        grid-column: span 1;
+      }
+
+      .service-dropdown {
+        position: relative;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .service-option {
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .service-option:hover {
+        background-color: #f0f0f0;
+      }
+
+      /* Serviços selecionados */
+      .servicos-selecionados {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .servico-selecionado {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        background-color: #e9f7ef;
+        border-radius: 20px;
+        font-size: 13px;
+      }
+
+      .remover-servico {
+        margin-left: 8px;
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .remover-servico:hover {
+        background-color: #d32f2f;
+      }
+
+      /* Assinatura */
+      .assinatura-container {
+        margin-top: 15px;
+      }
+
+      .assinatura-container img {
+        max-width: 200px;
+        max-height: 100px;
+        border: 1px solid #ddd;
+        margin-top: 5px;
+      }
+
+        #btnExportarExcel {
+      background-color: #007bff;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnExportarExcel:hover {
+      background-color: #0069d9;
+      transform: translateY(-2px);
+    }
+
+    #btnExportarPDF {
+      background-color: #28a745;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnExportarPDF:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+      
+    }
+
+    #btnApagarOS {
+      background-color: #dc3545;
+      color: white;
+      height: 35px;
+      padding: 6px;
+      border-radius: 5px;
+    }
+
+    #btnApagarOS:hover {
+      background-color: #c82333;
+      transform: translateY(-2px);
+    }
+
+      /* Media Queries para responsividade */
+      @media (min-width: 768px) {
+        .formulario-cabecalho {
+          flex-direction: row;
+          align-items: center;
+        }
+
+        .acoes {
+          margin-top: 0;
+        }
+
+        form[id^="form-edicao-"] {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .service-dropdown-container,
+        .assinatura-container,
+        .btn-atualizar {
+          grid-column: span 2;
+        }
+
+        .form-actions {
+          flex-wrap: nowrap;
+        }
+      }
+
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+
+        .btn,
+        .btn-acao {
+          width: 100%;
+        }
+
+        .acoes {
+          width: 100%;
+        }
+
+        .btn-acao {
+          flex-grow: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="top-bar">
+        <div class="arquivo-exportar">
+          <label for="nomeArquivo">Nome do arquivo:</label>
+          <input type="text" id="nomeArquivo" placeholder="(sem extensão)" />
+          <button id="btnExportarExcel">Exportar Excel</button>
+          <button id="btnExportarPDF">Exportar PDF</button>
+          <button class="btn btn-secondary btn-voltar" onclick="window.location.href='index.html'">
+            ← Voltar
+          </button>
+          <button id="btnApagarOS">Apagar Todas as OS</button>
+        </div>
+      </div>
+      
+      <h1>Gerenciar Ordens de Serviço</h1>
+      
+      <div id="lista-formularios">
+        <!-- Formulários serão carregados aqui -->
+      </div>
+    <script>
+      function apagarTodasOS() {
+  const confirmar = confirm("Tem certeza que deseja apagar todas as OS? Esta ação não pode ser desfeita.");
+
+  if (confirmar) {
+    localStorage.removeItem("formularios");
+    alert("Todas as OS foram apagadas com sucesso!");
+    // Se quiser, redirecione o usuário para a página inicial:
+    // window.location.href = "index.html";
+  }
+}
+
+document.getElementById("btnApagarOS").addEventListener("click", apagarTodasOS);
+      function limparDadosTemporarios() {
+    localStorage.removeItem("formularioTemporario");
+    window.location.href = "index.html"; // Ou sua página principal
+}
+
+      // Função para carregar os dropdowns
+      function carregarDropdowns(formEdicao, index, formulario) {
+        const tiposEquipamento = [
+          "ACJ",
+          "SPLIT",
+          "PISO TETO",
+          "SELF",
+          "FANCOIL",
+          "CHILLER",
+          "K7",
+          "PORTÁTIL",
+          "OUTROS (VIDE OBS)",
+        ];
+
+        const divTipoEquipamento = document.createElement("div");
+        divTipoEquipamento.innerHTML = `
+          <label for="tipoEquipamento-${index}">Tipo de Equipamento:</label>
+          <select id="tipoEquipamento-${index}" name="tipoEquipamento" required>
+            <option value="">Selecione</option>
+            ${tiposEquipamento
+              .map(
+                (op) =>
+                  `<option value="${op}" ${
+                    formulario.tipoEquipamento === op ? "selected" : ""
+                  }>${op}</option>`
+              )
+              .join("")}
+          </select>
+        `;
+        formEdicao.appendChild(divTipoEquipamento);
+
+        // Marca
+        const marcas = [
+          "CARRIER",
+          "MIDEA",
+          "SPRINGER",
+          "YORK",
+          "LG",
+          "DAIKIN",
+          "ELECTROLUX",
+          "PHILCO",
+          "BRITANIA",
+          "GREE",
+          "AGRATTO",
+          "VIX",
+          "SAMSUNG",
+          "FUJITSU",
+          "TRANE",
+          "PANASONIC",
+          "HITACHI",
+          "CONSUL",
+          "KOMECO",
+          "COMFEE",
+          "MAXIFLEX",
+          "RINETTO",
+          "FONTAINE",
+          "VOGGA",
+          "ADMIRAL",
+          "OLIMPIA SPLENDID",
+          "ELGIN",
+          "TCL",
+          "TEMPSTAR",
+          "SANYO",
+          "TROCALOR",
+          "OUTROS (VIDE OBS)",
+        ];
+
+        const divMarca = document.createElement("div");
+        divMarca.innerHTML = `
+          <label for="marca-${index}">Marca:</label>
+          <select id="marca-${index}" name="marca" required>
+            <option value="">Selecione</option>
+            ${marcas
+              .map(
+                (op) =>
+                  `<option value="${op}" ${
+                    formulario.Marca === op ? "selected" : ""
+                  }>${op}</option>`
+              )
+              .join("")}
+          </select>
+        `;
+        formEdicao.appendChild(divMarca);
+
+        // BTU
+        const btus = [
+          "7.000",
+          "7.500",
+          "9.000",
+          "10.000",
+          "11.000",
+          "12.000",
+          "15.000",
+          "18.000",
+          "21.000",
+          "22.000",
+          "24.000",
+          "30.000",
+          "36.000",
+          "48.000",
+          "56.000",
+          "57.000",
+          "60.000",
+          "72.000",
+          "80.000",
+          "90.000",
+          "120.000",
+          "144.000",
+          "240.000",
+          "3TR",
+          "5TR",
+          "6TR",
+          "10TR",
+          "12TR",
+          "20TR",
+          "OUTROS (VIDE OBS)",
+        ];
+
+        const divBtu = document.createElement("div");
+        divBtu.innerHTML = `
+          <label for="btu-${index}">BTU:</label>
+          <select id="btu-${index}" name="btu" required>
+            <option value="">Selecione</option>
+            ${btus
+              .map(
+                (op) =>
+                  `<option value="${op}" ${
+                    formulario.btu === op ? "selected" : ""
+                  }>${op}</option>`
+              )
+              .join("")}
+          </select>
+        `;
+        formEdicao.appendChild(divBtu);
+
+        // Data no formato DD/MM/AAAA
+        const divData = document.createElement("div");
+        divData.innerHTML = `
+          <label for="dataorçamento-${index}">Data (DD/MM/AAAA):</label>
+          <input type="text" id="dataorçamento-${index}" name="dataorçamento" 
+                 value="${formulario.dataorçamento || ""}" required 
+                 pattern="\d{2}/\d{2}/\d{4}" 
+                 title="Por favor, use o formato DD/MM/AAAA">
+        `;
+        formEdicao.appendChild(divData);
+      }
+
+      function carregarDescricaoServico(formEdicao, index, formulario) {
+        const divDescricao = document.createElement("div");
+        divDescricao.className = "service-dropdown-container";
+        divDescricao.innerHTML = `
+          <label>Descrição do Serviço:</label>
+          <div class="service-dropdown">
+            <input type="text" id="busca-servico-${index}" class="search-input" 
+                   placeholder="Digite para buscar serviços..." autocomplete="off">
+            <div class="dropdown-content" id="dropdown-servicos-${index}"></div>
+          </div>
+          <div id="servicos-selecionados-${index}" class="servicos-selecionados"></div>
+        `;
+        formEdicao.appendChild(divDescricao);
+
+        // Todas as opções de serviço combinadas
+        const todasOpcoesServico = [
+          "MANUTENÇÃO PREVENTIVA DA CONDENSADORA",
+          "MANUTENÇÃO PREVENTIVA DA EVAPORADORA",
+          "MANUTENÇÃO PREVENTIVA - LIMPEZA DE FILTROS",
+          "REVISÃO ELÉTRICA",
+          "RECARGA DE GÁS 1KG",
+          "RECARGA DE GÁS 2KGS",
+          "RECARGA DE GÁS 3KGS",
+          "RECARGA DE GÁS 4KGS",
+          "RECARGA DE GÁS 5KGS",
+          "RECARGA DE GÁS 6KGS",
+          "RECARGA DE GÁS 7KGS",
+          "RECARGA DE GÁS 8KGS",
+          "RECARGA DE GÁS 9KGS",
+          "RECARGA DE GÁS 10KG",
+          "TROCA DE CAPACITOR",
+          "TROCA DE TERMOSTATO",
+          "TROCA DE SENSOR DE TEMPERATURA",
+          "TROCA DE CONTROLE REMOTO",
+          "TROCA DA PLACA ELETRONICA RECEPTORA",
+          "TROCA DA PLACA ELETRONICA DA CONDENSADORA",
+          "TROCA DA PLACA ELETRONICA DA EVAPORADORA",
+          "TROCA DA PLACA ELETRONICA UNIVERSAL",
+          "TROCA DO COMPRESSOR",
+          "TROCA DE MOTOR DE VENTILADOR DA EVAPORADORA",
+          "TROCA DE MOTOR DE VENTILADOR DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA CONDENSADORA",
+          "TROCA DE SERPENTINA DA EVAPORADORA",
+          "TROCA DO CONJUNTO DE FILTROS",
+          "TROCA DAS ALETAS",
+          "TROCA DA VÁLVULA DE EXPANSÃO",
+          "TROCA DA HÉLICE",
+          "BOMBA DE DRENO",
+          "INSTALAÇÃO DE AR CONDICIONADO (DISTÂNCIA VIDE OBS)",
+          "DESISTALAÇÃO DO APARELHO",
+          "TROCA DA CHAVE INVERSORA",
+          "TROCA DO FILTRO SECADOR",
+          "TROCA DO GABINETE",
+          "TROCA DO MOTOR DA ALETA",
+          "TROCA DE RELÊ",
+          "TROCA DA TURBINA",
+          "TROCA DO MOTOR DA TURBINA",
+          "TROCA DA GRADE DA CONDENSADORA",
+          "TROCA DA CALHA",
+          "TROCA DA CHAVE TERMOSTÁTICA",
+          "TROCA DA CÂMARA DO VENTILADOR",
+          "TROCA DA MANGUEIRA DO DRENO",
+          "TROCA DO PAINEL",
+          "TROCA DO SENSOR DE DEGELO",
+          "TROCA DO DUTO DE AR",
+          "TROCA DO BOTÃO",
+          "TROCA DOS CALCOS DE BORRACHA",
+          "TROCA DO SUPORTE DA CONDENSADORA",
+          "TROCA DO SUPORTE DA EVAPORADORA",
+          "TROCA DO CAPILAR",
+          "TROCA DAS CONEXÕES DE COBRE",
+          "TROCA DO PISTÃO",
+          "TROCA DA CHAVE DE FLUXO",
+          "TROCA DE CONTROLE DE TEMPERATURA",
+          "TROCA DA BOBINA SOLENÓIDE",
+          "TROCA DA CHAVE SELETORA",
+          "TROCA DO PRESSOSTATO",
+          "TROCA DA VÁLVULA DE SERVIÇO",
+          "TROCA DA CONTATORA",
+          "TROCA DA BOBINA DA VÁLVULA",
+          "TROCA DO PAINEL DE CONTROLE",
+          "APLICAÇÃO DE NITROGÊNIO 1KG",
+          "APLICAÇÃO DE NITROGÊNIO 2KG",
+          "APLICAÇÃO DE NITROGÊNIO 3KG",
+          "SOLDA PARA SANAR VAZAMENTO",
+          "APERTO DAS PORCAS",
+          "DESMONTAGEM PARCIAL DA EVAPORADORA",
+          "DESMONTAGEM PARCIAL DA CONDENSADORA",
+          "OUTROS (VIDE OBS)",
+        ];
+
+        const inputBusca = document.getElementById(`busca-servico-${index}`);
+        const dropdown = document.getElementById(`dropdown-servicos-${index}`);
+        const containerSelecionados = document.getElementById(
+          `servicos-selecionados-${index}`
+        );
+
+        // Preencher dropdown com opções
+        function preencherDropdown(servicos) {
+          dropdown.innerHTML = "";
+          servicos.forEach((servico) => {
+            const div = document.createElement("div");
+            div.className = "service-option";
+            div.textContent = servico;
+            div.addEventListener("click", () => {
+              adicionarServicoSelecionado(servico);
+              inputBusca.value = "";
+              preencherDropdown(todasOpcoesServico);
+              dropdown.style.display = "none";
+            });
+            dropdown.appendChild(div);
+          });
+        }
+
+        // Adicionar serviço selecionado à lista
+        function adicionarServicoSelecionado(servico) {
+          if (
+            !containerSelecionados.querySelector(`[data-servico="${servico}"]`)
+          ) {
+            const div = document.createElement("div");
+            div.className = "servico-selecionado";
+            div.dataset.servico = servico;
+            div.innerHTML = `
+              ${servico}
+              <button type="button" class="remover-servico">×</button>
+            `;
+            containerSelecionados.appendChild(div);
+
+            // Adicionar evento de remoção
+            div
+              .querySelector(".remover-servico")
+              .addEventListener("click", () => {
+                div.remove();
+              });
+          }
+        }
+
+        // Filtro de busca
+        inputBusca.addEventListener("input", function () {
+          const termo = this.value.toLowerCase();
+          const filtrados = todasOpcoesServico.filter((servico) =>
+            servico.toLowerCase().includes(termo)
+          );
+          preencherDropdown(filtrados);
+          dropdown.style.display = filtrados.length ? "block" : "none";
+        });
+
+        // Mostrar dropdown ao focar no input
+        inputBusca.addEventListener("focus", function () {
+          preencherDropdown(todasOpcoesServico);
+          dropdown.style.display = "block";
+        });
+
+        // Ocultar dropdown ao clicar fora
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest(`.service-dropdown`)) {
+            dropdown.style.display = "none";
+          }
+        });
+
+        // Carregar serviços já selecionados
+        if (formulario.descricaoServico) {
+          formulario.descricaoServico.split(", ").forEach((servico) => {
+            if (servico.trim()) {
+              adicionarServicoSelecionado(servico.trim());
+            }
+          });
+        }
+      }
+
+      function carregarFormularios() {
+        const listaFormularios = document.getElementById("lista-formularios");
+        listaFormularios.innerHTML = "";
+
+        const formulariosSalvos =
+          JSON.parse(localStorage.getItem("formularios")) || [];
+
+        if (formulariosSalvos.length === 0) {
+          listaFormularios.innerHTML =
+            "<p>Nenhuma ordem de serviço encontrada.</p>";
+          return;
+        }
+
+        formulariosSalvos.forEach((formulario, index) => {
+          // Verifica se o formulário tem a estrutura esperada
+          if (!formulario || typeof formulario !== "object") {
+            console.error(
+              `Formulário inválido no índice ${index}:`,
+              formulario
+            );
+            return;
+          }
+
+          const item = document.createElement("div");
+          item.className = "formulario-item";
+          item.innerHTML = `
+            <div class="formulario-cabecalho">
+                <h3>Item ${index + 1} - ${formulario.Cliente || "Sem nome"} (${
+            formulario.tipoEquipamento || "Sem equipamento"
+          })</h3>
+                <div class="acoes">
+                    <button class="btn-acao btn-editar" onclick="toggleEdicao(${index})">Editar</button>
+                    <button class="btn-acao btn-apagar" onclick="apagarFormulario(${index})">Apagar</button>
+                </div>
+            </div>
+            <div class="formulario-conteudo" id="conteudo-${index}">
+                <form id="form-edicao-${index}">
+                    <!-- Campos básicos -->
+                    <div>
+                        <label>Tipo:</label>
+                        <input type="text" value="${
+                          formulario.tipo || ""
+                        }" disabled>
+                    </div>
+                    <div>
+                        <label for="tecnicoEquipe-${index}">Técnico/Equipe:</label>
+                        <input type="text" id="tecnicoEquipe-${index}" name="tecnicoEquipe" value="${
+            formulario.tecnicoEquipe || ""
+          }" required>
+                    </div>
+                    <div>
+                        <label for="Cliente-${index}">Cliente:</label>
+                        <input type="text" id="Cliente-${index}" name="Cliente" value="${
+            formulario.Cliente || ""
+          }" required>
+                    </div>
+                    <div>
+                        <label for="Setor-${index}">Setor:</label>
+                        <input type="text" id="Setor-${index}" name="Setor" value="${
+            formulario.Setor || ""
+          }" required>
+                    </div>
+                </form>
+                <button class="btn btn-primary btn-atualizar" onclick="atualizarFormulario(${index})">Atualizar OS</button>
+            </div>
+        `;
+
+          listaFormularios.appendChild(item);
+
+          const formEdicao = document.getElementById(`form-edicao-${index}`);
+          carregarDropdowns(formEdicao, index, formulario);
+          carregarDescricaoServico(formEdicao, index, formulario);
+
+          // Campos adicionais
+          const camposAdicionais = [
+            { nome: "numeroMaquina", label: "Número da Máquina", tipo: "text" },
+            { nome: "observacao", label: "Observação", tipo: "textarea" },
+            { nome: "responsavel", label: "Responsável", tipo: "text" },
+          ];
+
+          camposAdicionais.forEach((campo) => {
+            const div = document.createElement("div");
+            if (campo.tipo === "textarea") {
+              div.innerHTML = `
+                    <label for="${campo.nome}-${index}">${campo.label}:</label>
+                    <textarea id="${campo.nome}-${index}" name="${
+                campo.nome
+              }">${formulario[campo.nome] || ""}</textarea>
+                `;
+            } else {
+              div.innerHTML = `
+                    <label for="${campo.nome}-${index}">${campo.label}:</label>
+                    <input type="${campo.tipo}" id="${
+                campo.nome
+              }-${index}" name="${campo.nome}" value="${
+                formulario[campo.nome] || ""
+              }">
+                `;
+            }
+            formEdicao.appendChild(div);
+          });
+
+          // Assinatura
+          if (formulario.assinatura) {
+            const divAssinatura = document.createElement("div");
+            divAssinatura.className = "assinatura-container";
+            divAssinatura.innerHTML = `
+                <label>Assinatura do Cliente:</label>
+                <img src="${formulario.assinatura}" alt="Assinatura do cliente">
+                <p><em>Nota: A assinatura não pode ser editada.</em></p>
+            `;
+            formEdicao.appendChild(divAssinatura);
+          }
+        });
+      }
+      function verificarLocalStorage() {
+        const dados = localStorage.getItem("formularios");
+        console.log("Conteúdo do localStorage:", dados);
+
+        try {
+          const parsed = JSON.parse(dados || "[]");
+          console.log("Formulários parseados:", parsed);
+          console.log("Número de formulários:", parsed.length);
+
+          if (parsed.length > 0) {
+            console.log("Primeiro formulário:", parsed[0]);
+          }
+        } catch (e) {
+          console.error("Erro ao parsear dados do localStorage:", e);
+        }
+      }
+
+      // Chame esta função no carregamento da página
+      window.onload = function () {
+        verificarLocalStorage();
+        carregarFormularios();
+      };
+
+      // Função para formatar o nome do arquivo conforme solicitado
+function formatarNomeArquivo(formularios) {
+  if (!formularios || formularios.length === 0) {
+    return "ORDEM_SERVICO";
+  }
+  
+  const primeiroForm = formularios[0];
+  const cliente = primeiroForm.Cliente?.toUpperCase()?.replace(/\s+/g, '_') || "CLIENTE";
+  const tipo = primeiroForm.tipo?.toUpperCase() === "EXECUÇÃO" ? "EXECUCAO" : 
+             (primeiroForm.tipo?.toUpperCase() === "ORÇAMENTO" ? "ORCAMENTO" : "TIPO");
+  
+  // Extrair a data do formulário (pode estar no formato DD/MM/AAAA ou AAAA-MM-DD)
+  let dataFormatada = "";
+  if (primeiroForm.dataorçamento) {
+    if (primeiroForm.dataorçamento.includes("-")) {
+      // Formato AAAA-MM-DD (do input date)
+      const [ano, mes, dia] = primeiroForm.dataorçamento.split("-");
+      dataFormatada = `${dia}.${mes}.${ano.slice(2)}`;
+    } else if (primeiroForm.dataorçamento.includes("/")) {
+      // Formato DD/MM/AAAA (do formulário)
+      const [dia, mes, ano] = primeiroForm.dataorçamento.split("/");
+      dataFormatada = `${dia}.${mes}.${ano.slice(2)}`;
+    }
+  }
+  
+  // Se não conseguiu extrair a data do formulário, usar a data atual
+  if (!dataFormatada) {
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const ano = String(hoje.getFullYear()).slice(2);
+    dataFormatada = `${dia}.${mes}.${ano}`;
+  }
+  
+  return `${cliente}_${tipo}_${dataFormatada}`;
+}
+
+      async function exportarExcel() {
+        try {
+          const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
+          
+          if (formulariosSalvos.length === 0) {
+            alert("Nenhum formulário para exportar!");
+            return;
+          }
+
+          // Formatar nome do arquivo conforme solicitado
+          const nomeBase = formatarNomeArquivo(formulariosSalvos);
+
+          const workbook = XLSX.utils.book_new();
+          const dadosFormatados = [
+            [
+              "NOME CLIENTE",
+              "EXECUÇÃO",
+              "ORÇAMENTO",
+              "RESPONSAVEL (ACOMPANHAMENTO)",
+              "",
+              "SEÇÃO/SETOR",
+              "",
+              "TIPO DE EQUIPAMENTO",
+              "MARCA",
+              "BTU",
+              "DATA ORÇ.",
+              "Nº MAQ",
+              "DESCRIÇÃO DO SERVIÇO",
+              "",
+              "",
+              "DATA DO SV",
+              "OBSERVAÇÃO",
+              "",
+              "",
+              "TECNICO EQUIPE",
+            ],
+          ];
+
+          formulariosSalvos.forEach((item) => {
+            let tipoServico = "";
+            if (item.descricaoServico) {
+              const descricoes = item.descricaoServico.split(", ");
+              const temPreventiva = descricoes.some(
+                (d) =>
+                  d.includes("MANUTENÇÃO PREVENTIVA") ||
+                  d.includes("LIMPEZA DE FILTROS")
+              );
+              const temCorretiva = descricoes.some(
+                (d) =>
+                  !d.includes("MANUTENÇÃO PREVENTIVA") &&
+                  !d.includes("LIMPEZA DE FILTROS")
+              );
+
+              let descricaoServico = item.descricaoServico || "MPT";
+
+              if (temPreventiva && temCorretiva) {
+                const preventivas = descricoes.filter(
+                  (d) =>
+                    d.includes("MANUTENÇÃO PREVENTIVA") ||
+                    d.includes("LIMPEZA DE FILTROS")
+                );
+                const corretivas = descricoes.filter(
+                  (d) =>
+                    !d.includes("MANUTENÇÃO PREVENTIVA") &&
+                    !d.includes("LIMPEZA DE FILTROS")
+                );
+                descricaoServico =
+                  "SERVIÇO DE MANUTENÇÃO PREVENTIVA CONSISTINDO EM:\n" +
+                  preventivas.join("\n") +
+                  "\n\nSERVIÇO DE MANUTENÇÃO CORRETIVA CONSISTINDO EM:\n" +
+                  corretivas.join("\n");
+              } else if (temPreventiva) {
+                descricaoServico =
+                  "SERVIÇO DE MANUTENÇÃO PREVENTIVA CONSISTINDO EM:\n" +
+                  descricaoServico.split(", ").join("\n");
+              } else if (temCorretiva) {
+                descricaoServico =
+                  "SERVIÇO DE MANUTENÇÃO CORRETIVA CONSISTINDO EM:\n" +
+                  descricaoServico.split(", ").join("\n");
+              }
+
+              dadosFormatados.push([
+                item.Cliente,
+                item.tipo === "execução" ? "X" : "",
+                item.tipo === "orçamento" ? "X" : "",
+                item.responsavel || "",
+                "",
+                item.Setor || "",
+                "",
+                item.tipoEquipamento || "",
+                item.Marca || "",
+                item.btu || "",
+                item.tipo === "orçamento" ? item.dataorçamento : "",
+                item.numeroMaquina || "",
+                descricaoServico,
+                "",
+                "",
+                item.tipo === "execução" ? item.dataorçamento : "",
+                (item.observacao || "").toUpperCase(),
+                "",
+                "",
+                item.tecnicoEquipe,
+              ]);
+            }
+          });
+
+          const worksheet = XLSX.utils.aoa_to_sheet(dadosFormatados);
+          worksheet["!cols"] = [
+            { wch: 15 },
+            { wch: 10 },
+            { wch: 10 },
+            { wch: 25 },
+            { wch: 5 },
+            { wch: 15 },
+            { wch: 5 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 10 },
+            { wch: 12 },
+            { wch: 10 },
+            { wch: 60 },
+            { wch: 5 },
+            { wch: 5 },
+            { wch: 12 },
+            { wch: 20 },
+            { wch: 5 },
+            { wch: 5 },
+            { wch: 15 },
+          ];
+
+          XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Ordens de Serviço"
+          );
+
+          // Adicionar assinaturas se existirem
+          const hasSignatures = formulariosSalvos.some(
+            (item) => item.assinatura
+          );
+          if (hasSignatures) {
+            const assinaturasData = [
+              ["CLIENTE", "DATA", "ASSINATURA (Base64)"],
+            ];
+            formulariosSalvos.forEach((item) => {
+              if (item.assinatura) {
+                assinaturasData.push([
+                  item.Cliente,
+                  item.dataorçamento,
+                  item.assinatura,
+                ]);
+              }
+            });
+            const assinaturasSheet = XLSX.utils.aoa_to_sheet(assinaturasData);
+            assinaturasSheet["!cols"] = [
+              { wch: 25 },
+              { wch: 15 },
+              { wch: 100 },
+            ];
+            XLSX.utils.book_append_sheet(
+              workbook,
+              assinaturasSheet,
+              "Assinaturas"
+            );
+          }
+
+          XLSX.writeFile(workbook, `${nomeBase}.xlsx`);
+          return true;
+        } catch (error) {
+          console.error("Erro ao exportar Excel:", error);
+          alert("Erro ao exportar para Excel");
+          return false;
+        }
+      }
+
+      async function exportarPDF() {
+        try {
+          const { jsPDF } = window.jspdf;
+          const formulariosSalvos = JSON.parse(localStorage.getItem("formularios")) || [];
+
+          if (formulariosSalvos.length === 0) {
+            alert("Nenhum formulário para exportar no PDF!");
+            return false;
+          }
+
+          // Formatar nome do arquivo conforme solicitado
+          const nomeBase = formatarNomeArquivo(formulariosSalvos);
+
+          // Prepara os dados dos formulários
+          const formulariosProcessados = formulariosSalvos.map(form => ({
+            ...form,
+            tipo: form.tipo?.toUpperCase() || "N/I",
+            assinaturaImg: form.assinatura || null
+          }));
+
+          const doc = new jsPDF({ orientation: "landscape" });
+
+          const columns = [
+            { header: "Cliente", dataKey: "cliente" },
+            { header: "Tipo", dataKey: "tipo" },
+            { header: "Responsável", dataKey: "responsavel" },
+            { header: "Setor", dataKey: "setor" },
+            { header: "Tipo Equip.", dataKey: "tipoEquipamento" },
+            { header: "Marca", dataKey: "marca" },
+            { header: "BTU", dataKey: "btu" },
+            { header: "Data Orç.", dataKey: "dataOrcamento" },
+            { header: "Nº Máq.", dataKey: "numeroMaquina" },
+            { header: "Descrição do Serviço", dataKey: "descricaoServico" },
+            { header: "Data Exec.", dataKey: "dataExecucao" },
+            { header: "Observação", dataKey: "observacao" },
+            { header: "Técnico/Equipe", dataKey: "tecnicoEquipe" },
+            { header: "Assinatura", dataKey: "assinatura" }
+          ];
+
+          const dataAtual = new Date().toLocaleDateString("pt-BR");
+
+          const body = formulariosProcessados.map(item => ({
+            cliente: item.Cliente || "N/I",
+            tipo: item.tipo || "N/I",
+            responsavel: item.responsavel || "N/I",
+            setor: item.Setor || "N/I",
+            tipoEquipamento: item.tipoEquipamento || "N/I",
+            marca: item.Marca || "N/I",
+            btu: item.btu || "N/I",
+            dataOrcamento: item.tipo === "ORÇAMENTO" ? dataAtual : "N/I",
+            numeroMaquina: item.numeroMaquina || "N/I",
+            descricaoServico: formatarDescricao(item.descricaoServico),
+            dataExecucao: item.tipo === "EXECUÇÃO" ? dataAtual : "N/I",
+            observacao: (item.observacao || "N/I").toUpperCase(),
+            tecnicoEquipe: item.tecnicoEquipe || "N/I",
+            assinatura: "",
+            assinaturaImg: item.assinaturaImg
+          }));
+          
+          doc.autoTable({
+            columns,
+            body,
+            startY: 30,
+            styles: {
+              fontSize: 7,
+              cellPadding: 2,
+              minCellHeight: 15
+            },
+            headStyles: {
+              fillColor: [52, 73, 94],
+              textColor: 255,
+              cellPadding: 2
+            },
+            columnStyles: {
+              descricaoServico: { cellWidth: 50 },
+              observacao: { cellWidth: 30 },
+              assinatura: { cellWidth: 30 }
+            },
+            didDrawPage: function(data) {
+              const pageWidth = doc.internal.pageSize.getWidth();
+              doc.setFontSize(14);
+              doc.setFont("helvetica", "bold");
+              doc.text("ORDEM DE SERVIÇO - MSJR REP.", pageWidth / 2, 15, { align: "center" });
+              doc.setFontSize(10);
+              doc.setFont("helvetica", "normal");
+              doc.text("MSJR REP. - Assistência Técnica em Refrigeração",
+                pageWidth / 2, doc.internal.pageSize.height - 10, { align: "center" });
+            },
+            didDrawCell: function(data) {
+              if (data.column.dataKey === 'assinatura') {
+                const rowData = data.row.raw;
+
+                if (rowData.tipo === 'EXECUÇÃO' &&
+                  rowData.assinaturaImg &&
+                  rowData.assinaturaImg.startsWith("data:image")) {
+
+                  const imgProps = doc.getImageProperties(rowData.assinaturaImg);
+                  const imgWidth = 25;
+                  const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                  const x = data.cell.x + (data.cell.width - imgWidth) / 2;
+                  const y = data.cell.y + (data.cell.height - imgHeight) / 2;
+
+                  doc.addImage(rowData.assinaturaImg, 'PNG', x, y, imgWidth, imgHeight);
+                }
+              }
+            }
+          });
+
+          doc.save(`${nomeBase}.pdf`);
+          return true;
+        } catch (error) {
+          console.error("Erro ao gerar PDF:", error);
+          alert("Erro ao exportar para PDF: " + error.message);
+          return false;
+        }
+      }
+
+      // Funções auxiliares
+      function formatarData(data) {
+        if (data && data.includes("-")) {
+          const [ano, mes, dia] = data.split("-");
+          return `${dia}.${mes}.${ano.slice(2)}`;
+        }
+        const hoje = new Date();
+        return `${String(hoje.getDate()).padStart(2, "0")}.${String(hoje.getMonth() + 1).padStart(2, "0")}.${String(hoje.getFullYear()).slice(2)}`;
+      }
+
+      function formatarDescricao(desc) {
+        if (!desc) return "N/I";
+        return desc.split(",").map(s => s.trim()).join("\n");
+      }
+
+      async function exportarArquivo(tipo) {
+  const botao = document.getElementById(`btnExportar${tipo}`);
+  if (!botao) return;
+
+  const textoOriginal = botao.textContent;
+
+  try {
+    botao.textContent = "Exportando...";
+    botao.disabled = true;
+
+    let sucesso = false;
+    if (tipo === "Excel") {
+      sucesso = await exportarExcel();
+    } else if (tipo === "PDF") {
+      sucesso = await exportarPDF();
+    }
+
+    if (sucesso) {
+      alert(`${tipo} exportado com sucesso!`);
+    } else {
+      alert(`Erro ao exportar ${tipo}`);
+    }
+  } catch (erro) {
+    console.error(`Erro ao exportar ${tipo}:`, erro);
+    alert(`Erro inesperado ao exportar ${tipo}`);
+  } finally {
+    botao.textContent = textoOriginal;
+    botao.disabled = false;
+  }
+}
+
+document.getElementById("btnExportarExcel").addEventListener("click", () => exportarArquivo("Excel"));
+document.getElementById("btnExportarPDF").addEventListener("click", () => exportarArquivo("PDF"));
+
+      function toggleEdicao(index) {
+        const conteudo = document.getElementById(`conteudo-${index}`);
+        conteudo.classList.toggle("aberto");
+      }
+
+      function atualizarFormulario(index) {
+        const formulariosSalvos =
+          JSON.parse(localStorage.getItem("formularios")) || [];
+        const form = document.getElementById(`form-edicao-${index}`);
+
+        // Capturar serviços selecionados
+        const servicosSelecionados = Array.from(
+          document.querySelectorAll(
+            `#servicos-selecionados-${index} .servico-selecionado`
+          )
+        ).map((div) => div.dataset.servico);
+
+        formulariosSalvos[index].descricaoServico =
+          servicosSelecionados.join(", ");
+
+        // Atualizar outros campos
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+          if (key !== "descricaoServico" && key !== "assinatura") {
+            formulariosSalvos[index][key] = value;
+          }
+        }
+
+        localStorage.setItem("formularios", JSON.stringify(formulariosSalvos));
+        alert("Ordem de serviço atualizada com sucesso!");
+        carregarFormularios();
+      }
+
+      function apagarFormulario(index) {
+        if (confirm("Tem certeza que deseja apagar esta ordem de serviço?")) {
+          const formulariosSalvos =
+            JSON.parse(localStorage.getItem("formularios")) || [];
+          formulariosSalvos.splice(index, 1);
+          localStorage.setItem(
+            "formularios",
+            JSON.stringify(formulariosSalvos)
+          );
+          carregarFormularios();
+        }
+      }
+
+      // Inicialização
+      document
+        .getElementById("btnExportar")
+        .addEventListener("click", exportarAmbos);
+      window.onload = carregarFormularios;
+    </script>
+  </body>
+</html>
